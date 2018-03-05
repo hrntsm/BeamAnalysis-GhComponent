@@ -1,7 +1,13 @@
 ﻿using System;
+using System.Drawing;
+using System.Windows.Forms;
 using System.Collections.Generic;
 
 using Grasshopper.Kernel;
+using Grasshopper.Kernel.Attributes;
+using Grasshopper.GUI;
+using Grasshopper.GUI.Canvas;
+
 using Rhino.Geometry;
 
 namespace BeamAnalysis
@@ -21,6 +27,14 @@ namespace BeamAnalysis
               "rgkr", "beam")
         {
         }
+        
+        /// <summary>
+        /// UIのカスタム
+        /// </summary>
+        public override void CreateAttributes()
+        {
+            m_attributes = new UI_Setting.Attributes_Custom(this);
+        }
 
         /// <summary>
         /// Registers all the input parameters for this component.
@@ -28,7 +42,7 @@ namespace BeamAnalysis
         protected override void RegisterInputParams(GH_Component.GH_InputParamManager pManager)
         {
             pManager.AddNumberParameter("Analysis Parametar", "Param", "Input Analysis Parameter", GH_ParamAccess.list);
-            pManager.AddNumberParameter("Load", "P", "Centralized load (kN)", GH_ParamAccess.item);
+            pManager.AddNumberParameter("Load", "Load", "Centralized load (kN)", GH_ParamAccess.item);
             pManager.AddNumberParameter("Young's modulus", "E", "Young's modulus (N/mm^2)", GH_ParamAccess.item);
         }
 
@@ -88,16 +102,14 @@ namespace BeamAnalysis
         {
             get
             {
-                // You can add image files to your project resources and access them like this:
+                // アイコンの設定（未設定）
                 //return Resources.IconForThisComponent;
                 return null;
             }
         }
 
         /// <summary>
-        /// Each component must have a unique Guid to identify it. 
-        /// It is vital this Guid doesn't change otherwise old ghx files 
-        /// that use the old ID will partially fail during loading.
+        /// GUIDの設定
         /// </summary>
         public override Guid ComponentGuid
         {
@@ -195,3 +207,85 @@ namespace H_Shape_Model
         }
     }
 }
+
+/// <summary>
+/// UI にかかわる設定のソース
+/// </summary>
+namespace UI_Setting
+{
+    /// <summary>
+    /// ボタンを押すとWindowsFormを出力させる
+    /// </summary>
+    public class Attributes_Custom : GH_ComponentAttributes
+    {
+        public Attributes_Custom(GH_Component owner) : base(owner)
+        {
+        }
+
+        /// <summary>
+        /// ここでボタンの箱(Rectangle)をを設定する。
+        /// サイズが直接指定なので、、汎用性は低め
+        /// 今後は引数から箱のサイズを決めれるようにしたい。
+        /// </summary>
+        protected override void Layout()
+        {
+            base.Layout();
+
+            Rectangle rec0 = GH_Convert.ToRectangle(Bounds);
+            rec0.Height += 22;
+
+            Rectangle rec1 = rec0;
+            rec1.Y = rec1.Bottom - 22;
+            rec1.Height = 22;
+            rec1.Inflate(-2, -2);
+            
+            Bounds = rec0;
+            ButtonBounds = rec1;
+        }
+        private Rectangle ButtonBounds
+        {
+            get;
+            set;
+        }
+
+        /// <summary>
+        /// ここで箱からgrasshopperで認識されるTextCapsuleを作成する。
+        /// </summary>
+        /// <param name="canvas"></param>
+        /// <param name="graphics"></param>
+        /// <param name="channel"></param>
+        protected override void Render(GH_Canvas canvas, Graphics graphics, GH_CanvasChannel channel)
+        {
+            base.Render(canvas, graphics, channel);
+            if (channel == GH_CanvasChannel.Objects)
+            {
+                GH_Capsule button = GH_Capsule.CreateTextCapsule(ButtonBounds, ButtonBounds, GH_Palette.Black, "output", 2, 0);
+                button.Render(graphics, Selected, Owner.Locked, false);
+                button.Dispose();
+            }
+        }
+
+        /// <summary>
+        /// マウスダウンした時のイベントハンドラ
+        /// 左クリックした際にWindouwsFormを使用してメッセージボックスを出力させる
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        /// <returns></returns>
+        public override GH_ObjectResponse RespondToMouseDown(GH_Canvas sender, GH_CanvasMouseEvent e)
+        {
+            if (e.Button == MouseButtons.Left)
+            {
+                RectangleF rec = ButtonBounds;
+                if (rec.Contains(e.CanvasLocation))
+                {
+                    MessageBox.Show("入力データと解析結果を\nWindowsFormを使用して出力させる。", "結果のアウトプット", MessageBoxButtons.OK);
+                    return GH_ObjectResponse.Handled;
+                }
+            }
+            
+            return base.RespondToMouseDown(sender, e);
+        }
+    }
+}
+

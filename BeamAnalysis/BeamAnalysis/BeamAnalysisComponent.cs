@@ -4,9 +4,14 @@ using System.Windows.Forms;
 using System.Collections.Generic;
 
 using Grasshopper.Kernel;
+using Grasshopper.Kernel.Types;
 using Grasshopper.Kernel.Attributes;
 using Grasshopper.GUI;
+using Grasshopper.GUI.HTML;
 using Grasshopper.GUI.Canvas;
+using Grasshopper.GUI.Gradient;
+
+using GH_IO.Serialization;
 
 using Rhino.Geometry;
 
@@ -22,9 +27,12 @@ namespace BeamAnalysis
         /// new tabs/panels will automatically be created.
         /// </summary>
         public BeamAnalysisComponent()
-          : base("BeamAnalysis", "BeamAnalysis",
-              "analyzes the beam",
-              "rgkr", "beam")
+          : base("BeamAnalysis",                     // 名称
+                 "BeamAnalysis",                     // 略称
+                 "Stress Analysis of the Beam",      // コンポーネントの説明
+                 "rgkr",                             // カテゴリ(タブの表示名)
+                 "Beam ANLYS"                        // サブカテゴリ(タブ内の表示名)
+                )
         {
         }
         
@@ -115,13 +123,37 @@ namespace BeamAnalysis
         {
             get { return new Guid("621eac03-23fb-445c-9430-44ce37bf9020"); }
         }
+
+        /// <summary>
+        /// コンポーネントを右クリック時に出るコンテキストメニューの編集
+        /// </summary>
+        public override bool AppendMenuItems(ToolStripDropDown menu)
+        {
+            Menu_AppendObjectName(menu);          // オブジェクト名
+            Menu_AppendSeparator(menu);           // セパレータ
+            Menu_AppendPreviewItem(menu);         // プレビュー
+            Menu_AppendEnableItem(menu);          // Enable (コンポーネントの有効化)
+            Menu_AppendBakeItem(menu);            // ベーク
+            Menu_AppendSeparator(menu);           // セパレータ
+            Menu_AppendItem(menu, "test1");       // 追加部分
+            Menu_AppendSeparator(menu);           // セパレータ
+            Menu_AppendItem(menu, "test2");       // 追加部分
+            Menu_AppendSeparator(menu);           // セパレータ
+            Menu_AppendRuntimeMessages(menu);     // ランタイムメッセージ
+            Menu_AppendSeparator(menu);           // セパレータ
+            Menu_AppendObjectHelp(menu);          // ヘルプ
+            return true;
+        }
     }
 }
-namespace H_Shape_Model
+
+/// <summary>
+/// rhino上への出力関連の設定
+/// </summary>
+namespace ModelDisp
 {
     public class H_Shape_Model : GH_Component
     {
-
         public H_Shape_Model() : base("Make H Shape Model", "H Steel", "Display H Shape Model", "rgkr", "H-Shape")
         {
         }
@@ -209,7 +241,7 @@ namespace H_Shape_Model
 }
 
 /// <summary>
-/// UI にかかわる設定のソース
+/// UI にかかわる設定
 /// </summary>
 namespace UI_Setting
 {
@@ -221,10 +253,9 @@ namespace UI_Setting
         public Attributes_Custom(GH_Component owner) : base(owner)
         {
         }
-
         /// <summary>
-        /// ここでボタンの箱(Rectangle)をを設定する。
-        /// サイズが直接指定なので、、汎用性は低め
+        /// ボタンの箱(Rectangle)をを設定する。
+        /// サイズが直接指定なので、汎用性は低め
         /// 今後は引数から箱のサイズを決めれるようにしたい。
         /// </summary>
         protected override void Layout()
@@ -241,7 +272,9 @@ namespace UI_Setting
             
             Bounds = rec0;
             ButtonBounds = rec1;
+
         }
+
         private Rectangle ButtonBounds
         {
             get;
@@ -249,7 +282,26 @@ namespace UI_Setting
         }
 
         /// <summary>
-        /// ここで箱からgrasshopperで認識されるTextCapsuleを作成する。
+        /// ラジオボタンの作りかけ
+        /// </summary>
+        /// <param name="graphics"></param>
+        /// <param name="center"></param>
+        /// <param name="Checked"></param>
+        private void DrawRadioButton(Graphics graphics, PointF center, bool Checked )
+        {
+            if (Checked)
+            {
+                graphics.FillEllipse(Brushes.Black, center.X - 6, center.Y - 6, 12, 12);
+            }
+            else
+            {
+                graphics.FillEllipse(Brushes.Black, center.X - 6, center.Y - 6, 12, 12);
+                graphics.FillEllipse(Brushes.White, center.X - 4, center.Y - 4,  8,  8);
+            }
+        }
+
+        /// <summary>
+        /// 入力された箱からgrasshopperで認識されるTextCapsuleを作成する。
         /// </summary>
         /// <param name="canvas"></param>
         /// <param name="graphics"></param>

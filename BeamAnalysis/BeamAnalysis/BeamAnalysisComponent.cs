@@ -51,7 +51,8 @@ namespace BeamAnalysis
         {
             pManager.AddNumberParameter("Analysis Parametar", "Param", "Input Analysis Parameter", GH_ParamAccess.list);
             pManager.AddNumberParameter("Load", "Load", "Centralized load (kN)", GH_ParamAccess.item);
-            pManager.AddNumberParameter("Young's modulus", "E", "Young's modulus (N/mm^2)", GH_ParamAccess.item);
+            pManager.AddNumberParameter("Lk", "Lk", "buckling length (mm)", GH_ParamAccess.item, 0.0);
+            pManager.AddNumberParameter("Young's modulus", "E", "Young's modulus (N/mm^2)", GH_ParamAccess.item, 205000);
         }
 
         /// <summary>
@@ -61,6 +62,7 @@ namespace BeamAnalysis
         {
             pManager.AddNumberParameter("Bending Moment", "M", "output max bending moment(kNm)", GH_ParamAccess.item);
             pManager.AddNumberParameter("Bending Stress", "Sig", "output max bending stress (N/mm^2)", GH_ParamAccess.item);
+            pManager.AddNumberParameter("examination result", "Sig/fb", "output max examination result", GH_ParamAccess.item);
             pManager.AddNumberParameter("Deformation", "D", "output max deformation(mm)", GH_ParamAccess.item);
         }
 
@@ -75,18 +77,20 @@ namespace BeamAnalysis
             // パラメータはひとまとめにするため、List にまとめる
             List<double> Param = new List<double>();
             double P = double.NaN;
+            double Lk = double.NaN;
             double E = double.NaN;
             // output
             double M = double.NaN;
             double Sig = double.NaN;
             double D = double.NaN;
             //
-            double L, Iy, Zy;
+            double L, Iy, Zy, fb;
 
             // Paramは List なので、GetDataList とする。
             if (!DA.GetDataList(0, Param)) { return; }
             if (!DA.GetData(1, ref P)) { return; }
-            if (!DA.GetData(2, ref E)) { return; }
+            if (!DA.GetData(2, ref Lk)) { return; }
+            if (!DA.GetData(3, ref E)) { return; }
 
             L = Param[0];
             Iy = Param[1];
@@ -95,11 +99,13 @@ namespace BeamAnalysis
             M = P * (L / 1000) / 4;
             Sig = M * 1000000 / Zy;
             D = P * 1000 * L * L * L / (48 * E * Iy);
+            fb = 235.0;
             
             // 出力設定
             DA.SetData(0, M);
             DA.SetData(1, Sig);
-            DA.SetData(2, D);
+            DA.SetData(2, Sig/fb);
+            DA.SetData(3, D);
         }
 
         /// <summary>
@@ -204,23 +210,12 @@ namespace ModelDisp
             double tf = double.NaN;
             double Iy, Zy;
 
-            double def_B = 300.0;
-            double def_H = 500.0;
-            double def_tw = 9.0;
-            double def_tf = 16.0;
-            double def_L = 3000.0;
-
             // 入力設定
             if (!DA.GetData(0, ref B))  { return; }
             if (!DA.GetData(1, ref H))  { return; }
             if (!DA.GetData(2, ref tw)) { return; }
             if (!DA.GetData(3, ref tf)) { return; }
             if (!DA.GetData(4, ref L))  { return; }
-
-            if (Double.IsNaN(B))
-            {
-                B = def_B;
-            }
 
             // 原点の作成
             var Ori = new Point3d(0, 0, 0);
@@ -262,8 +257,8 @@ namespace ModelDisp
             model[2] = web;
 
             // まとめての出力なので、SetDataList で出力
-            DA.SetDataList(0, model);
-            DA.SetDataList(1, Params);
+            DA.SetDataList(1, model);
+            DA.SetDataList(0, Params);
         }
 
         public override Guid ComponentGuid

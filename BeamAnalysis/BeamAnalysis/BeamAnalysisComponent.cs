@@ -135,14 +135,36 @@ namespace BeamAnalysis
             Menu_AppendEnableItem(menu);          // Enable (コンポーネントの有効化)
             Menu_AppendBakeItem(menu);            // ベーク
             Menu_AppendSeparator(menu);           // セパレータ
-            Menu_AppendItem(menu, "test1");       // 追加部分
+            Menu_AppendItem(menu, "Buckling Consideration",        // 追加部分
+                            Menu_MyCustomItemClicked);
             Menu_AppendSeparator(menu);           // セパレータ
-            Menu_AppendItem(menu, "test2");       // 追加部分
+            Menu_AppendItem(menu, "test");       // 追加部分
             Menu_AppendSeparator(menu);           // セパレータ
             Menu_AppendRuntimeMessages(menu);     // ランタイムメッセージ
             Menu_AppendSeparator(menu);           // セパレータ
             Menu_AppendObjectHelp(menu);          // ヘルプ
             return true;
+        }
+
+        /// <summary>
+        /// 座屈考慮のフラグの処理
+        /// このままだとずっとfalseのままなので要修正
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void Menu_MyCustomItemClicked(Object sender, EventArgs e)
+        {
+            bool BucklingConsideration = false;
+
+            if (BucklingConsideration == true)
+            {
+                BucklingConsideration = true;
+            }
+            else {
+                BucklingConsideration = false;
+            }
+            string test = BucklingConsideration.ToString();
+            Rhino.RhinoApp.WriteLine("BucklingConsideration:"+ test);
         }
     }
 }
@@ -159,17 +181,17 @@ namespace ModelDisp
         }
         protected override void RegisterInputParams(GH_InputParamManager pManager)
         {
-            pManager.AddNumberParameter("Width", "B", "Model Width (mm)", GH_ParamAccess.item);
-            pManager.AddNumberParameter("Height", "H", "Model High (mm)", GH_ParamAccess.item);
-            pManager.AddNumberParameter("Web Thickness", "tw", "Web Thickness (mm)", GH_ParamAccess.item);
-            pManager.AddNumberParameter("Flange Thickness", "tf", "Flange Thickness (mm)", GH_ParamAccess.item);
-            pManager.AddNumberParameter("Length", "L", "Model Length (mm)", GH_ParamAccess.item);
+            pManager.AddNumberParameter("Width", "B", "Model Width (mm)", GH_ParamAccess.item, 200.0 );
+            pManager.AddNumberParameter("Height", "H", "Model High (mm)", GH_ParamAccess.item, 400.0);
+            pManager.AddNumberParameter("Web Thickness", "tw", "Web Thickness (mm)", GH_ParamAccess.item, 8.0);
+            pManager.AddNumberParameter("Flange Thickness", "tf", "Flange Thickness (mm)", GH_ParamAccess.item, 13.0);
+            pManager.AddNumberParameter("Length", "L", "Model Length (mm)", GH_ParamAccess.item, 3000.0);
         }
 
         protected override void RegisterOutputParams(GH_OutputParamManager pManager)
         {
-            pManager.AddSurfaceParameter("View Model", "model", "output Model", GH_ParamAccess.item);
             pManager.AddNumberParameter("Analysis Parametar", "Param", "output Analysis Parameter", GH_ParamAccess.item);
+            pManager.AddSurfaceParameter("View Model Surface", "Srf", "output Model Surface", GH_ParamAccess.item);
         }
 
         protected override void SolveInstance(IGH_DataAccess DA)
@@ -182,12 +204,23 @@ namespace ModelDisp
             double tf = double.NaN;
             double Iy, Zy;
 
+            double def_B = 300.0;
+            double def_H = 500.0;
+            double def_tw = 9.0;
+            double def_tf = 16.0;
+            double def_L = 3000.0;
+
             // 入力設定
-            if (!DA.GetData(0, ref B)) { return; }
-            if (!DA.GetData(1, ref H)) { return; }
+            if (!DA.GetData(0, ref B))  { return; }
+            if (!DA.GetData(1, ref H))  { return; }
             if (!DA.GetData(2, ref tw)) { return; }
             if (!DA.GetData(3, ref tf)) { return; }
-            if (!DA.GetData(4, ref L)) { return; }
+            if (!DA.GetData(4, ref L))  { return; }
+
+            if (Double.IsNaN(B))
+            {
+                B = def_B;
+            }
 
             // 原点の作成
             var Ori = new Point3d(0, 0, 0);

@@ -50,8 +50,8 @@ namespace BeamAnalysis
         protected override void RegisterInputParams(GH_Component.GH_InputParamManager pManager)
         {
             pManager.AddNumberParameter("Analysis Parametar", "Param", "Input Analysis Parameter", GH_ParamAccess.list);
-            pManager.AddNumberParameter("Load", "Load", "Centralized load (kN)", GH_ParamAccess.item);
-            pManager.AddNumberParameter("Lk", "Lk", "buckling length (mm)", GH_ParamAccess.item, 0.0);
+            pManager.AddNumberParameter("Load", "Load", "Centralized load (kN)", GH_ParamAccess.item,100);
+            pManager.AddNumberParameter("Lb", "Lb", "buckling length (mm)", GH_ParamAccess.item, 0.0);
             pManager.AddNumberParameter("Young's modulus", "E", "Young's modulus (N/mm^2)", GH_ParamAccess.item, 205000);
         }
 
@@ -62,6 +62,7 @@ namespace BeamAnalysis
         {
             pManager.AddNumberParameter("Bending Moment", "M", "output max bending moment(kNm)", GH_ParamAccess.item);
             pManager.AddNumberParameter("Bending Stress", "Sig", "output max bending stress (N/mm^2)", GH_ParamAccess.item);
+            pManager.AddNumberParameter("examination result", "fb", "output max examination result", GH_ParamAccess.item);
             pManager.AddNumberParameter("examination result", "Sig/fb", "output max examination result", GH_ParamAccess.item);
             pManager.AddNumberParameter("Deformation", "D", "output max deformation(mm)", GH_ParamAccess.item);
         }
@@ -77,35 +78,45 @@ namespace BeamAnalysis
             // パラメータはひとまとめにするため、List にまとめる
             List<double> Param = new List<double>();
             double P = double.NaN;
-            double Lk = double.NaN;
+            double Lb = double.NaN;
             double E = double.NaN;
             // output
             double M = double.NaN;
             double Sig = double.NaN;
             double D = double.NaN;
             //
-            double L, Iy, Zy, fb;
-
+            double L, Iy, Zy, i_t, lamda, Af, F, H, fb, fb1, fb2;
+            double C = 1.0;
+            
             // Paramは List なので、GetDataList とする。
             if (!DA.GetDataList(0, Param)) { return; }
             if (!DA.GetData(1, ref P)) { return; }
-            if (!DA.GetData(2, ref Lk)) { return; }
+            if (!DA.GetData(2, ref Lb)) { return; }
             if (!DA.GetData(3, ref E)) { return; }
 
             L = Param[0];
             Iy = Param[1];
             Zy = Param[2];
+            i_t = Param[3];
+            lamda = Param[4];
+            Af = Param[5];
+            F = Param[6];
+            H = Param[7];
 
             M = P * (L / 1000) / 4;
             Sig = M * 1000000 / Zy;
             D = P * 1000 * L * L * L / (48 * E * Iy);
-            fb = 235.0;
+
+            fb1 = (1.0 - 0.4 * (Lb / i_t) * (Lb / i_t) / (C * lamda * lamda)) * F / 1.5;
+            fb2 = 89000.0 / (Lb * H / Af);
+            fb = Math.Min(Math.Max(fb1, fb2),F/1.5);
             
             // 出力設定
             DA.SetData(0, M);
             DA.SetData(1, Sig);
-            DA.SetData(2, Sig/fb);
-            DA.SetData(3, D);
+            DA.SetData(2, fb);
+            DA.SetData(3, Sig/fb);
+            DA.SetData(4, D);
         }
 
         /// <summary>
@@ -116,9 +127,8 @@ namespace BeamAnalysis
         {
             get
             {
-                // アイコンの設定（未設定）
-                //return Resources.IconForThisComponent;
-                return null;
+                Bitmap Resources = new Bitmap(@"D:\Repos\BeamAnalysis\BeamAnalysis\BeamAnalysis\images\icon.png");
+                return Resources;
             }
         }
 
@@ -191,6 +201,7 @@ namespace ModelDisp
             pManager.AddNumberParameter("Height", "H", "Model High (mm)", GH_ParamAccess.item, 400.0);
             pManager.AddNumberParameter("Web Thickness", "tw", "Web Thickness (mm)", GH_ParamAccess.item, 8.0);
             pManager.AddNumberParameter("Flange Thickness", "tf", "Flange Thickness (mm)", GH_ParamAccess.item, 13.0);
+            pManager.AddNumberParameter("F", "F", "F (N/mm2)", GH_ParamAccess.item, 235);
             pManager.AddNumberParameter("Length", "L", "Model Length (mm)", GH_ParamAccess.item, 3000.0);
         }
 
@@ -208,14 +219,16 @@ namespace ModelDisp
             double L = double.NaN;
             double tw = double.NaN;
             double tf = double.NaN;
-            double Iy, Zy;
+            double F = double.NaN;
+            double Iy, Zy, i_t, lamda, Af;
 
             // 入力設定
             if (!DA.GetData(0, ref B))  { return; }
             if (!DA.GetData(1, ref H))  { return; }
             if (!DA.GetData(2, ref tw)) { return; }
             if (!DA.GetData(3, ref tf)) { return; }
-            if (!DA.GetData(4, ref L))  { return; }
+            if (!DA.GetData(4, ref F)) { return; }
+            if (!DA.GetData(5, ref L))  { return; }
 
             // 原点の作成
             var Ori = new Point3d(0, 0, 0);
@@ -244,11 +257,23 @@ namespace ModelDisp
             // 解析用パラメータの計算
             Iy = (1.0 / 12.0 * B * H * H * H) - (1.0 / 12.0 * (B - tw) * (H - 2 * tf) * (H - 2 * tf) * (H - 2 * tf));
             Zy = Iy / (H / 2);
+
+            // 許容曲げ関連の計算
+            i_t = Math.Sqrt((tf * B * B * B + (H / 6.0 - tf) * tw * tw * tw) / (12 * (tf * B + (H / 6.0 - tf) * tw)));
+            lamda = 1500 / Math.Sqrt(F / 1.5);
+            Af = B * tf;
+
             // ひとまとめにするため List で作成
             List<double> Params = new List<double>();
             Params.Add(L);  //  部材長さ
             Params.Add(Iy); //  断面二次モーメント
             Params.Add(Zy); //  断面係数
+            Params.Add(i_t);
+            Params.Add(lamda);
+            Params.Add(Af);
+            Params.Add(F);
+            Params.Add(H);
+
 
             // モデルはRhino上に出力するだけなので、とりあえず配列でまとめる
             var model = new PlaneSurface[3];
@@ -259,6 +284,15 @@ namespace ModelDisp
             // まとめての出力なので、SetDataList で出力
             DA.SetDataList(1, model);
             DA.SetDataList(0, Params);
+        }
+
+        protected override System.Drawing.Bitmap Icon
+        {
+            get
+            {
+                Bitmap Resources = new Bitmap(@"D:\Repos\BeamAnalysis\BeamAnalysis\BeamAnalysis\images\H_icon.png");
+                return Resources;
+            }
         }
 
         public override Guid ComponentGuid

@@ -27,11 +27,11 @@ namespace BeamAnalysis
         /// new tabs/panels will automatically be created.
         /// </summary>
         public BeamAnalysisComponent()
-          : base("BeamAnalysis",                     // 名称
-                 "BeamAnalysis",                     // 略称
+          : base("Centralized Load",                     // 名称
+                 "Centralized L",                     // 略称
                  "Stress Analysis of the Beam",      // コンポーネントの説明
                  "rgkr",                             // カテゴリ(タブの表示名)
-                 "Beam ANLYS"                        // サブカテゴリ(タブ内の表示名)
+                 "Analysis"                        // サブカテゴリ(タブ内の表示名)
                 )
         {
         }
@@ -127,7 +127,7 @@ namespace BeamAnalysis
         {
             get
             {
-                Bitmap Resources = new Bitmap(@"D:\Repos\BeamAnalysis\BeamAnalysis\BeamAnalysis\images\icon.png");
+                Bitmap Resources = new Bitmap(@"D:\Repos\BeamAnalysis\BeamAnalysis\BeamAnalysis\images\CL_icon.png");
                 return Resources;
             }
         }
@@ -183,7 +183,124 @@ namespace BeamAnalysis
             Rhino.RhinoApp.WriteLine("BucklingConsideration:"+ test);
         }
     }
+
+
+    public class Beam_UL_AnalysisComponent : GH_Component
+    {
+        /// <summary>
+        /// 名称の設定
+        /// </summary>
+        public Beam_UL_AnalysisComponent()
+      : base("Trapezoid Load",      // 名称
+             "Trapezoid L",                         // 略称
+             "Stress Analysis of the Beam",      // コンポーネントの説明
+             "rgkr",                             // カテゴリ(タブの表示名)
+             "Analysis"               // サブカテゴリ(タブ内の表示名)
+            )
+    {
+    }
+
+    /// <summary>
+    /// Registers all the input parameters for this component.
+    /// </summary>
+    protected override void RegisterInputParams(GH_Component.GH_InputParamManager pManager)
+    {
+        pManager.AddNumberParameter("Analysis Parametar", "Param", "Input Analysis Parameter", GH_ParamAccess.list);
+        pManager.AddNumberParameter("Trapezoid Load", "W", "Trapezoid Load (kN/m^2)", GH_ParamAccess.item, 10);
+        pManager.AddNumberParameter("D Width", "DW", "Domination Width (mm)", GH_ParamAccess.item, 1800);
+        pManager.AddNumberParameter("Lb", "Lb", "Buckling Length (mm)", GH_ParamAccess.item, 0.0);
+        pManager.AddNumberParameter("Young's Modulus", "E", "Young's Modulus (N/mm^2)", GH_ParamAccess.item, 205000);
+    }
+
+    /// <summary>
+    /// Registers all the output parameters for this component.
+    /// </summary>
+    protected override void RegisterOutputParams(GH_Component.GH_OutputParamManager pManager)
+    {
+        pManager.AddNumberParameter("Bending Moment", "M", "output max bending moment(kNm)", GH_ParamAccess.item);
+        pManager.AddNumberParameter("Bending Stress", "Sig", "output max bending stress (N/mm^2)", GH_ParamAccess.item);
+        pManager.AddNumberParameter("examination result", "fb", "output max examination result", GH_ParamAccess.item);
+        pManager.AddNumberParameter("examination result", "Sig/fb", "output max examination result", GH_ParamAccess.item);
+        pManager.AddNumberParameter("Deformation", "D", "output max deformation(mm)", GH_ParamAccess.item);
+    }
+
+    /// <summary>
+    /// This is the method that actually does the work.
+    /// </summary>
+    /// <param name="DA">The DA object can be used to retrieve data from input parameters and 
+    /// to store data in output parameters.</param>
+    protected override void SolveInstance(IGH_DataAccess DA)
+    {
+        // input
+        // パラメータはひとまとめにするため、List にまとめる
+        List<double> Param = new List<double>();
+        double W = double.NaN;
+        double DW = double.NaN;
+        double Lb = double.NaN;
+        double E = double.NaN;
+        // output
+        double M = double.NaN;
+        double Sig = double.NaN;
+        double D = double.NaN;
+        //
+        double L, Iy, Zy, i_t, lamda, Af, F, H, fb, fb1, fb2;
+        double C = 1.0;
+
+        // Paramは List なので、GetDataList とする。
+        if (!DA.GetDataList(0, Param)) { return; }
+        if (!DA.GetData(1, ref W)) { return; }
+        if (!DA.GetData(2, ref DW)) { return; }
+        if (!DA.GetData(3, ref Lb)) { return; }
+        if (!DA.GetData(4, ref E)) { return; }
+
+        L = Param[0];
+        Iy = Param[1];
+        Zy = Param[2];
+        i_t = Param[3];
+        lamda = Param[4];
+        Af = Param[5];
+        F = Param[6];
+        H = Param[7];
+
+        M = (W/1000000) / 24 * (3 * L * L - 4 * DW * DW);
+        Sig = M * 1000000 / Zy;
+        D = (W/1000000) / (1920 * E * Iy) * (5 * L * L - 4 * DW * DW) * (5 * L * L - 4 * DW * DW);
+
+        fb1 = (1.0 - 0.4 * (Lb / i_t) * (Lb / i_t) / (C * lamda * lamda)) * F / 1.5;
+        fb2 = 89000.0 / (Lb * H / Af);
+        fb = Math.Min(Math.Max(fb1, fb2), F / 1.5);
+
+        // 出力設定
+        DA.SetData(0, M);
+        DA.SetData(1, Sig);
+        DA.SetData(2, fb);
+        DA.SetData(3, Sig / fb);
+        DA.SetData(4, D);
+    }
+
+    /// <summary>
+    /// Provides an Icon for every component that will be visible in the User Interface.
+    /// Icons need to be 24x24 pixels.
+    /// </summary>
+    protected override System.Drawing.Bitmap Icon
+    {
+        get
+        {
+            Bitmap Resources = new Bitmap(@"D:\Repos\BeamAnalysis\BeamAnalysis\BeamAnalysis\images\UL_icon.png");
+            return Resources;
+        }
+    }
+
+    /// <summary>
+    /// GUIDの設定
+    /// </summary>
+    public override Guid ComponentGuid
+    {
+        get { return new Guid("621eac11-23fb-445c-9430-44ce37bf9020"); }
+    }
 }
+}
+
 
 /// <summary>
 /// rhino上への出力関連の設定
@@ -192,7 +309,13 @@ namespace ModelDisp
 {
     public class H_Shape_Model : GH_Component
     {
-        public H_Shape_Model() : base("Make H Shape Model", "H Steel", "Display H Shape Model", "rgkr", "H-Shape")
+        public H_Shape_Model() 
+            : base("Make H Shape Model",
+                   "H Steel",
+                   "Display H Shape Model",
+                   "rgkr",
+                   "Model"
+                  )
         {
         }
         protected override void RegisterInputParams(GH_InputParamManager pManager)
@@ -202,7 +325,7 @@ namespace ModelDisp
             pManager.AddNumberParameter("Web Thickness", "tw", "Web Thickness (mm)", GH_ParamAccess.item, 8.0);
             pManager.AddNumberParameter("Flange Thickness", "tf", "Flange Thickness (mm)", GH_ParamAccess.item, 13.0);
             pManager.AddNumberParameter("F", "F", "F (N/mm2)", GH_ParamAccess.item, 235);
-            pManager.AddNumberParameter("Length", "L", "Model Length (mm)", GH_ParamAccess.item, 3000.0);
+            pManager.AddNumberParameter("Length", "L", "Model Length (mm)", GH_ParamAccess.item, 6300.0);
         }
 
         protected override void RegisterOutputParams(GH_OutputParamManager pManager)

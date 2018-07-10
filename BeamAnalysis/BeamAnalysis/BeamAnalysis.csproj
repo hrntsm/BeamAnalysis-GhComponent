@@ -69,8 +69,11 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
+    <Content Include="images\BOX_icon.png" />
     <Content Include="images\H_icon.png" />
     <Content Include="images\CL_icon.png" />
+    <Content Include="images\L_icon.png" />
+    <Content Include="images\Result_M_icon.png" />
     <Content Include="images\UL_icon.png" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

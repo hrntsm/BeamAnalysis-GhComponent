@@ -27,11 +27,11 @@ namespace BeamAnalysis
         /// new tabs/panels will automatically be created.
         /// </summary>
         public BeamAnalysisComponent()
-          : base("Centralized Load",                     // 名称
-                 "Centralized L",                     // 略称
+          : base("Centralized Load",                 // 名称
+                 "Centralized L",                    // 略称
                  "Stress Analysis of the Beam",      // コンポーネントの説明
                  "rgkr",                             // カテゴリ(タブの表示名)
-                 "Analysis"                        // サブカテゴリ(タブ内の表示名)
+                 "Analysis"                          // サブカテゴリ(タブ内の表示名)
                 )
         {
         }
@@ -85,7 +85,7 @@ namespace BeamAnalysis
             double Sig = double.NaN;
             double D = double.NaN;
             //
-            double L, Iy, Zy, i_t, lamda, Af, F, H, fb, fb1, fb2;
+            double L, Iy, Zy, i_t, lamda, Af, F, H, fb_calc, fb, fb1, fb2;
             double C = 1.0;
             
             // Paramは List なので、GetDataList とする。
@@ -94,23 +94,41 @@ namespace BeamAnalysis
             if (!DA.GetData(2, ref Lb)) { return; }
             if (!DA.GetData(3, ref E)) { return; }
 
-            L = Param[0];
-            Iy = Param[1];
-            Zy = Param[2];
-            i_t = Param[3];
-            lamda = Param[4];
-            Af = Param[5];
-            F = Param[6];
-            H = Param[7];
+            H = Param[0];
+            L = Param[1];
+            F = Param[2];
+            Iy = Param[3];
+            Zy = Param[4];
+            fb_calc = Param[5];
+            i_t = Param[6];
+            lamda = Param[7];
+            Af = Param[8];
 
             M = P * (L / 1000) / 4;
             Sig = M * 1000000 / Zy;
             D = P * 1000 * L * L * L / (48 * E * Iy);
 
-            fb1 = (1.0 - 0.4 * (Lb / i_t) * (Lb / i_t) / (C * lamda * lamda)) * F / 1.5;
-            fb2 = 89000.0 / (Lb * H / Af);
-            fb = Math.Min(Math.Max(fb1, fb2),F/1.5);
-            
+            // 許容曲げの計算
+            if (fb_calc == 0) // H強軸回りの場合
+            {
+                fb1 = (1.0 - 0.4 * (Lb / i_t) * (Lb / i_t) / (C * lamda * lamda)) * F / 1.5;
+                fb2 = 89000.0 / (Lb * H / Af);
+                fb = Math.Min(Math.Max(fb1, fb2), F / 1.5);
+            }
+            else if (fb_calc == 1) // 箱型丸型の場合
+            {
+                fb = F / 1.5;
+            }
+            else if (fb_calc == 2) // L型等非対称断面の場合
+            {
+                fb2 = 89000.0 / (Lb * H / Af);
+                fb = Math.Min(fb2, F / 1.5);
+            }
+            else // エラー用　sig/fb が inf になるように 0指定
+            {
+                fb = 0.0;
+            }
+
             // 出力設定
             DA.SetData(0, M);
             DA.SetData(1, Sig);
@@ -243,7 +261,7 @@ namespace BeamAnalysis
         double Sig = double.NaN;
         double D = double.NaN;
         //
-        double L, Iy, Zy, i_t, lamda, Af, F, H, fb, fb1, fb2;
+        double L, Iy, Zy, i_t, lamda, Af, F, H, fb_calc, fb, fb1, fb2;
         double C = 1.0;
 
         // Paramは List なので、GetDataList とする。
@@ -253,14 +271,15 @@ namespace BeamAnalysis
         if (!DA.GetData(3, ref Lb)) { return; }
         if (!DA.GetData(4, ref E)) { return; }
 
-        L = Param[0];
-        Iy = Param[1];
-        Zy = Param[2];
-        i_t = Param[3];
-        lamda = Param[4];
-        Af = Param[5];
-        F = Param[6];
-        H = Param[7];
+        H = Param[0];
+        L = Param[1];
+        F = Param[2];
+        Iy = Param[3];
+        Zy = Param[4];
+        fb_calc = Param[5];
+        i_t = Param[6];
+        lamda = Param[7];
+        Af = Param[8];
 
         M = (W/1000000) / 24 * (3 * L * L - 4 * DW * DW);
         Sig = M * 1000000 / Zy;
@@ -269,6 +288,27 @@ namespace BeamAnalysis
         fb1 = (1.0 - 0.4 * (Lb / i_t) * (Lb / i_t) / (C * lamda * lamda)) * F / 1.5;
         fb2 = 89000.0 / (Lb * H / Af);
         fb = Math.Min(Math.Max(fb1, fb2), F / 1.5);
+
+        // 許容曲げの計算
+        if (fb_calc == 0) // H強軸回りの場合
+        {
+            fb1 = (1.0 - 0.4 * (Lb / i_t) * (Lb / i_t) / (C * lamda * lamda)) * F / 1.5;
+            fb2 = 89000.0 / (Lb * H / Af);
+            fb = Math.Min(Math.Max(fb1, fb2), F / 1.5);
+        }
+        else if (fb_calc == 1) // 箱型丸型の場合
+        {
+            fb = F / 1.5;
+        }
+        else if (fb_calc == 2) // L型等非対称断面の場合
+        {
+            fb2 = 89000.0 / (Lb * H / Af);
+            fb = Math.Min(fb2, F / 1.5);
+        }
+        else // エラー用　sig/fb が inf になるように 0指定
+        {
+            fb = 0.0;
+        }
 
         // 出力設定
         DA.SetData(0, M);
@@ -301,26 +341,383 @@ namespace BeamAnalysis
 }
 }
 
-
 /// <summary>
-/// rhino上への出力関連の設定
+/// rhino上への出力と断面諸元の計算
 /// </summary>
 namespace ModelDisp
 {
+    /// <summary>
+    /// H型断面の計算、出力
+    /// </summary>
     public class H_Shape_Model : GH_Component
     {
-        public H_Shape_Model() 
+        public H_Shape_Model()
             : base("Make H Shape Model",
-                   "H Steel",
+                   "H Shape",
                    "Display H Shape Model",
                    "rgkr",
-                   "Model"
+                   "CrossSection"
                   )
         {
         }
         protected override void RegisterInputParams(GH_InputParamManager pManager)
         {
-            pManager.AddNumberParameter("Width", "B", "Model Width (mm)", GH_ParamAccess.item, 200.0 );
+            pManager.AddNumberParameter("Width", "B", "Model Width (mm)", GH_ParamAccess.item, 200.0);
+            pManager.AddNumberParameter("Height", "H", "Model High (mm)", GH_ParamAccess.item, 400.0);
+            pManager.AddNumberParameter("Web Thickness", "tw", "Web Thickness (mm)", GH_ParamAccess.item, 8.0);
+            pManager.AddNumberParameter("Flange Thickness", "tf", "Flange Thickness (mm)", GH_ParamAccess.item, 13.0);
+            pManager.AddNumberParameter("F", "F", "F (N/mm2)", GH_ParamAccess.item, 235);
+            pManager.AddNumberParameter("Length", "L", "Model Length (mm)", GH_ParamAccess.item, 6300.0);
+        }
+
+        protected override void RegisterOutputParams(GH_OutputParamManager pManager)
+        {
+            pManager.AddNumberParameter("Analysis Parametar", "Param", "output Analysis Parameter", GH_ParamAccess.item);
+            pManager.AddSurfaceParameter("View Model Surface", "Srf", "output Model Surface", GH_ParamAccess.item);
+        }
+
+        protected override void SolveInstance(IGH_DataAccess DA)
+        {
+            // 引数設定
+            double B = double.NaN;
+            double H = double.NaN;
+            double L = double.NaN;
+            double tw = double.NaN;
+            double tf = double.NaN;
+            double F = double.NaN;
+            double Iy, Zy, i_t, lamda, Af;
+            int fb_calc = 0; // 0:H強軸　1:箱型、丸形　2:L形
+
+            // 入力設定
+            if (!DA.GetData(0, ref B)) { return; }
+            if (!DA.GetData(1, ref H)) { return; }
+            if (!DA.GetData(2, ref tw)) { return; }
+            if (!DA.GetData(3, ref tf)) { return; }
+            if (!DA.GetData(4, ref F)) { return; }
+            if (!DA.GetData(5, ref L)) { return; }
+
+            // 原点の作成
+            var Ori = new Point3d(0, 0, 0);
+
+            // 上フランジのサーフェス作成
+            var UFp1 = new Point3d(0, 0, H / 2);
+            var UFp2 = new Point3d(1, 0, H / 2);
+            var UFp3 = new Point3d(0, 1, H / 2);
+            var UFplane = new Plane(UFp1, UFp2, UFp3);
+            var upper_flange = new PlaneSurface(UFplane, new Interval(-B / 2, B / 2), new Interval(0, L));
+
+            // 下フランジのサーフェス作成
+            var BFp1 = new Point3d(0, 0, -H / 2);
+            var BFp2 = new Point3d(1, 0, -H / 2);
+            var BFp3 = new Point3d(0, 1, -H / 2);
+            var BFplane = new Plane(BFp1, BFp2, BFp3);
+            var bottom_flange = new PlaneSurface(BFplane, new Interval(-B / 2, B / 2), new Interval(0, L));
+
+            // ウェブのサーフェス作成
+            var Wp1 = new Point3d(0, 0, 0);
+            var Wp2 = new Point3d(0, 0, -1);
+            var Wp3 = new Point3d(0, 1, 0);
+            var Wplane = new Plane(Wp1, Wp2, Wp3);
+            var web = new PlaneSurface(Wplane, new Interval(-H / 2, H / 2), new Interval(0, L));
+
+            // 解析用パラメータの計算
+            Iy = (1.0 / 12.0 * B * H * H * H) - (1.0 / 12.0 * (B - tw) * (H - 2 * tf) * (H - 2 * tf) * (H - 2 * tf));
+            Zy = Iy / (H / 2);
+
+            // 許容曲げ関連の計算
+            i_t = Math.Sqrt((tf * B * B * B + (H / 6.0 - tf) * tw * tw * tw) / (12 * (tf * B + (H / 6.0 - tf) * tw)));
+            lamda = 1500 / Math.Sqrt(F / 1.5);
+            Af = B * tf;
+
+            // ひとまとめにするため List で作成
+            List<double> Params = new List<double>();
+            Params.Add(H);
+            Params.Add(L);  //  部材長さ
+            Params.Add(F);
+            Params.Add(Iy); //  断面二次モーメント
+            Params.Add(Zy); //  断面係数
+            Params.Add(fb_calc); 
+            Params.Add(i_t);
+            Params.Add(lamda);
+            Params.Add(Af);
+
+            // モデルはRhino上に出力するだけなので、とりあえず配列でまとめる
+            var model = new PlaneSurface[3];
+            model[0] = upper_flange;
+            model[1] = bottom_flange;
+            model[2] = web;
+
+            // まとめての出力なので、SetDataList で出力
+            DA.SetDataList(1, model);
+            DA.SetDataList(0, Params);
+        }
+
+        protected override System.Drawing.Bitmap Icon
+        {
+            get
+            {
+                Bitmap Resources = new Bitmap(@"D:\Repos\BeamAnalysis\BeamAnalysis\BeamAnalysis\images\H_icon.png");
+                return Resources;
+            }
+        }
+
+        public override Guid ComponentGuid
+        {
+            get { return new Guid("419c3a3a-cc48-4717-8cef-5f5647a5ecAa"); }
+        }
+    }
+
+    /// <summary>
+    /// L型断面の計算、出力
+    /// </summary>
+    public class L_Shape_Model : GH_Component
+    {
+        public L_Shape_Model()
+            : base("Make L Shape Model",
+                   "L Shape",
+                   "Display L Shape Model",
+                   "rgkr",
+                   "CrossSection"
+                  )
+        {
+        }
+        protected override void RegisterInputParams(GH_InputParamManager pManager)
+        {
+            pManager.AddNumberParameter("Width", "B", "Model Width (mm)", GH_ParamAccess.item, 200.0);
+            pManager.AddNumberParameter("Height", "H", "Model High (mm)", GH_ParamAccess.item, 400.0);
+            pManager.AddNumberParameter("Web Thickness", "tw", "Web Thickness (mm)", GH_ParamAccess.item, 8.0);
+            pManager.AddNumberParameter("Flange Thickness", "tf", "Flange Thickness (mm)", GH_ParamAccess.item, 13.0);
+            pManager.AddNumberParameter("F", "F", "F (N/mm2)", GH_ParamAccess.item, 235);
+            pManager.AddNumberParameter("Length", "L", "Model Length (mm)", GH_ParamAccess.item, 6300.0);
+        }
+
+        protected override void RegisterOutputParams(GH_OutputParamManager pManager)
+        {
+            pManager.AddNumberParameter("Analysis Parametar", "Param", "output Analysis Parameter", GH_ParamAccess.item);
+            pManager.AddSurfaceParameter("View Model Surface", "Srf", "output Model Surface", GH_ParamAccess.item);
+        }
+
+        protected override void SolveInstance(IGH_DataAccess DA)
+        {
+            // 引数設定
+            double B = double.NaN;
+            double H = double.NaN;
+            double L = double.NaN;
+            double tw = double.NaN;
+            double tf = double.NaN;
+            double F = double.NaN;
+            double Iy, Zy, i_t, lamda, Af;
+            int fb_calc = 2; // 0:H強軸　1:箱型、丸形　2:L形
+
+            // 入力設定
+            if (!DA.GetData(0, ref B)) { return; }
+            if (!DA.GetData(1, ref H)) { return; }
+            if (!DA.GetData(2, ref tw)) { return; }
+            if (!DA.GetData(3, ref tf)) { return; }
+            if (!DA.GetData(4, ref F)) { return; }
+            if (!DA.GetData(5, ref L)) { return; }
+
+            // 原点の作成
+            var Ori = new Point3d(0, 0, 0);
+            
+            // フランジのサーフェス作成
+            var Fp1 = new Point3d(0, 0, -H / 2);
+            var Fp2 = new Point3d(1, 0, -H / 2);
+            var Fp3 = new Point3d(0, 1, -H / 2);
+            var Fplane = new Plane(Fp1, Fp2, Fp3);
+            var flange = new PlaneSurface(Fplane, new Interval(-B / 2, B / 2), new Interval(0, L));
+
+            // ウェブのサーフェス作成
+            var Wp1 = new Point3d(-B / 2, 0, 0);
+            var Wp2 = new Point3d(-B / 2, 0, -1);
+            var Wp3 = new Point3d(-B / 2, 1, 0);
+            var Wplane = new Plane(Wp1, Wp2, Wp3);
+            var web = new PlaneSurface(Wplane, new Interval(-H / 2, H / 2), new Interval(0, L));
+
+            // 解析用パラメータの計算
+            Iy = (1.0 / 12.0 * B * H * H * H) - (1.0 / 12.0 * (B - tw) * (H - 2 * tf) * (H - 2 * tf) * (H - 2 * tf));
+            Zy = Iy / (H / 2);
+
+            // 許容曲げ関連の計算
+            i_t = Math.Sqrt((tf * B * B * B + (H / 6.0 - tf) * tw * tw * tw) / (12 * (tf * B + (H / 6.0 - tf) * tw)));
+            lamda = 1500 / Math.Sqrt(F / 1.5);
+            Af = B * tf;
+
+            // ひとまとめにするため List で作成
+            List<double> Params = new List<double>();
+            Params.Add(H);
+            Params.Add(L);  //  部材長さ
+            Params.Add(F);
+            Params.Add(Iy); //  断面二次モーメント
+            Params.Add(Zy); //  断面係数
+            Params.Add(fb_calc);
+
+            // モデルはRhino上に出力するだけなので、とりあえず配列でまとめる
+            var model = new PlaneSurface[2];
+            model[0] = flange;
+            model[1] = web;
+
+            // まとめての出力なので、SetDataList で出力
+            DA.SetDataList(1, model);
+            DA.SetDataList(0, Params);
+        }
+
+        protected override System.Drawing.Bitmap Icon
+        {
+            get
+            {
+                Bitmap Resources = new Bitmap(@"D:\Repos\BeamAnalysis\BeamAnalysis\BeamAnalysis\images\L_icon.png");
+                return Resources;
+            }
+        }
+
+        public override Guid ComponentGuid
+        {
+            get { return new Guid("419c3a44-cc48-4717-8cef-5f5647a5ecAa"); }
+        }
+    }
+
+    /// <summary>
+    /// 箱型断面の計算、出力
+    /// </summary>
+    public class BOX_Shape_Model : GH_Component
+    {
+        public BOX_Shape_Model()
+            : base("Make BOX Shape Model",
+                   "BOX Shape",
+                   "Display BOX Shape Model",
+                   "rgkr",
+                   "CrossSection"
+                  )
+        {
+        }
+        protected override void RegisterInputParams(GH_InputParamManager pManager)
+        {
+            pManager.AddNumberParameter("Width", "B", "Model Width (mm)", GH_ParamAccess.item, 150.0);
+            pManager.AddNumberParameter("Height", "H", "Model High (mm)", GH_ParamAccess.item, 150.0);
+            pManager.AddNumberParameter("Thickness", "t", "Thickness (mm)", GH_ParamAccess.item, 6.0);
+            pManager.AddNumberParameter("F", "F", "F (N/mm2)", GH_ParamAccess.item, 235);
+            pManager.AddNumberParameter("Length", "L", "Model Length (mm)", GH_ParamAccess.item, 3200.0);
+        }
+
+        protected override void RegisterOutputParams(GH_OutputParamManager pManager)
+        {
+            pManager.AddNumberParameter("Analysis Parametar", "Param", "output Analysis Parameter", GH_ParamAccess.item);
+            pManager.AddSurfaceParameter("View Model Surface", "Srf", "output Model Surface", GH_ParamAccess.item);
+        }
+
+        protected override void SolveInstance(IGH_DataAccess DA)
+        {
+            // 引数設定
+            double B = double.NaN;
+            double H = double.NaN;
+            double L = double.NaN;
+            double t = double.NaN;
+            double F = double.NaN;
+            double Iy, Zy;
+            int fb_calc = 1; // 0:H強軸　1:箱型、丸形　2:L形
+
+            // 入力設定
+            if (!DA.GetData(0, ref B)) { return; }
+            if (!DA.GetData(1, ref H)) { return; }
+            if (!DA.GetData(2, ref t)) { return; }
+            if (!DA.GetData(3, ref F)) { return; }
+            if (!DA.GetData(4, ref L)) { return; }
+
+            // 原点の作成
+            var Ori = new Point3d(0, 0, 0);
+
+            // 上フランジのサーフェス作成
+            var UFp1 = new Point3d(0, 0, H / 2);
+            var UFp2 = new Point3d(1, 0, H / 2);
+            var UFp3 = new Point3d(0, 1, H / 2);
+            var UFplane = new Plane(UFp1, UFp2, UFp3);
+            var upper_flange = new PlaneSurface(UFplane, new Interval(-B / 2, B / 2), new Interval(0, L));
+
+            // 下フランジのサーフェス作成
+            var BFp1 = new Point3d(0, 0, -H / 2);
+            var BFp2 = new Point3d(1, 0, -H / 2);
+            var BFp3 = new Point3d(0, 1, -H / 2);
+            var BFplane = new Plane(BFp1, BFp2, BFp3);
+            var bottom_flange = new PlaneSurface(BFplane, new Interval(-B / 2, B / 2), new Interval(0, L));
+
+            // ウェブのサーフェス作成
+            var LWp1 = new Point3d(-B / 2, 0, 0);
+            var LWp2 = new Point3d(-B / 2, 0, -1);
+            var LWp3 = new Point3d(-B / 2, 1, 0);
+            var LWplane = new Plane(LWp1, LWp2, LWp3);
+            var Lweb = new PlaneSurface(LWplane, new Interval(-H / 2, H / 2), new Interval(0, L));
+
+            // ウェブのサーフェス作成
+            var RWp1 = new Point3d(B / 2, 0, 0);
+            var RWp2 = new Point3d(B / 2, 0, -1);
+            var RWp3 = new Point3d(B / 2, 1, 0);
+            var RWplane = new Plane(RWp1, RWp2, RWp3);
+            var Rweb = new PlaneSurface(RWplane, new Interval(-H / 2, H / 2), new Interval(0, L));
+
+            // 解析用パラメータの計算
+            Iy = 1.0 / 12.0 * ((B * H * H * H) - ((B - t) * (H - t) * (H - t) * (H - t)));
+            Zy = Iy / (H / 2);
+
+            // ひとまとめにするため List で作成
+            List<double> Params = new List<double>();
+            Params.Add(H);
+            Params.Add(L);  //  部材長さ
+            Params.Add(F);
+            Params.Add(Iy); //  断面二次モーメント
+            Params.Add(Zy); //  断面係数
+            Params.Add(fb_calc);
+            Params.Add(0);
+            Params.Add(0);
+            Params.Add(0);
+
+            // モデルはRhino上に出力するだけなので、とりあえず配列でまとめる
+            var model = new PlaneSurface[4];
+            model[0] = upper_flange;
+            model[1] = bottom_flange;
+            model[2] = Rweb;
+            model[3] = Lweb;
+
+            // まとめての出力なので、SetDataList で出力
+            DA.SetDataList(1, model);
+            DA.SetDataList(0, Params);
+        }
+
+        protected override System.Drawing.Bitmap Icon
+        {
+            get
+            {
+                Bitmap Resources = new Bitmap(@"D:\Repos\BeamAnalysis\BeamAnalysis\BeamAnalysis\images\BOX_icon.png");
+                return Resources;
+            }
+        }
+
+        public override Guid ComponentGuid
+        {
+            get { return new Guid("419c3a44-cc48-4717-8fdf-5f5647a5ecAa"); }
+        }
+    }
+}
+
+/// <summary>
+/// rhino上への結果の出力関連の設定
+/// </summary>
+namespace ResultView
+{
+        public class ResultViewer : GH_Component
+    {
+        public ResultViewer()
+            : base("Make H Shape Model",
+                   "H Shape",
+                   "Display H Shape Model",
+                   "rgkr",
+                   "Result"
+                  )
+        {
+        }
+        protected override void RegisterInputParams(GH_InputParamManager pManager)
+        {
+            pManager.AddNumberParameter("Width", "B", "Model Width (mm)", GH_ParamAccess.item, 200.0);
             pManager.AddNumberParameter("Height", "H", "Model High (mm)", GH_ParamAccess.item, 400.0);
             pManager.AddNumberParameter("Web Thickness", "tw", "Web Thickness (mm)", GH_ParamAccess.item, 8.0);
             pManager.AddNumberParameter("Flange Thickness", "tf", "Flange Thickness (mm)", GH_ParamAccess.item, 13.0);
@@ -346,12 +743,12 @@ namespace ModelDisp
             double Iy, Zy, i_t, lamda, Af;
 
             // 入力設定
-            if (!DA.GetData(0, ref B))  { return; }
-            if (!DA.GetData(1, ref H))  { return; }
+            if (!DA.GetData(0, ref B)) { return; }
+            if (!DA.GetData(1, ref H)) { return; }
             if (!DA.GetData(2, ref tw)) { return; }
             if (!DA.GetData(3, ref tf)) { return; }
             if (!DA.GetData(4, ref F)) { return; }
-            if (!DA.GetData(5, ref L))  { return; }
+            if (!DA.GetData(5, ref L)) { return; }
 
             // 原点の作成
             var Ori = new Point3d(0, 0, 0);
@@ -413,14 +810,14 @@ namespace ModelDisp
         {
             get
             {
-                Bitmap Resources = new Bitmap(@"D:\Repos\BeamAnalysis\BeamAnalysis\BeamAnalysis\images\H_icon.png");
+                Bitmap Resources = new Bitmap(@"D:\Repos\BeamAnalysis\BeamAnalysis\BeamAnalysis\images\Result_M_icon.png");
                 return Resources;
             }
         }
 
         public override Guid ComponentGuid
         {
-            get { return new Guid("419c3a3a-cc48-4717-8cef-5f5647a5ecAa"); }
+            get { return new Guid("419c3a3a-cc48-4717-8cef-5f5647a5dcAa"); }
         }
     }
 }

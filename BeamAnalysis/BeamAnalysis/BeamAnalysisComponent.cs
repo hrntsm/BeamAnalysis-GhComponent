@@ -20,6 +20,7 @@ namespace BeamAnalysis
     public class Beam_CL_Analysis : GH_Component
     {
         /// <summary>
+        /// 中央集中荷重の梁の計算
         /// </summary>
         public Beam_CL_Analysis()
           : base("Centralized Load",                 // 名称
@@ -32,12 +33,12 @@ namespace BeamAnalysis
         }
         
         /// <summary>
-        /// UIのカスタム
+        /// UIのカスタム 作り切れてないのでコメントアウト
         /// </summary>
-        public override void CreateAttributes()
-        {
-            m_attributes = new UI_Setting.Attributes_Custom(this);
-        }
+//      public override void CreateAttributes()
+//      {
+//          m_attributes = new UI_Setting.Attributes_Custom(this);
+//      }
 
         /// <summary>
         /// インプットパラメータの登録
@@ -45,9 +46,9 @@ namespace BeamAnalysis
         protected override void RegisterInputParams(GH_Component.GH_InputParamManager pManager)
         {
             pManager.AddNumberParameter("Analysis Parametar", "Param", "Input Analysis Parameter", GH_ParamAccess.list);
-            pManager.AddNumberParameter("Load", "Load", "Centralized load (kN)", GH_ParamAccess.item,100);
-            pManager.AddNumberParameter("Lb", "Lb", "buckling length (mm)", GH_ParamAccess.item, 0.0);
-            pManager.AddNumberParameter("Young's modulus", "E", "Young's modulus (N/mm^2)", GH_ParamAccess.item, 205000);
+            pManager.AddNumberParameter("Load", "Load", "Centralized Load (kN)", GH_ParamAccess.item,100);
+            pManager.AddNumberParameter("Lb", "Lb", "Buckling Length (mm)", GH_ParamAccess.item, 0.0);
+            pManager.AddNumberParameter("Young's modulus", "E", "Young's Modulus (N/mm^2)", GH_ParamAccess.item, 205000);
         }
 
         /// <summary>
@@ -55,17 +56,17 @@ namespace BeamAnalysis
         /// </summary>
         protected override void RegisterOutputParams(GH_Component.GH_OutputParamManager pManager)
         {
-            pManager.AddNumberParameter("Bending Moment", "M", "output max bending moment(kNm)", GH_ParamAccess.item);
-            pManager.AddNumberParameter("Bending Stress", "Sig", "output max bending stress (N/mm^2)", GH_ParamAccess.item);
-            pManager.AddNumberParameter("examination result", "fb", "output max examination result", GH_ParamAccess.item);
-            pManager.AddNumberParameter("examination result", "Sig/fb", "output max examination result", GH_ParamAccess.item);
-            pManager.AddNumberParameter("Deformation", "D", "output max deformation(mm)", GH_ParamAccess.item);
+            pManager.AddNumberParameter("Bending Moment", "M", "Output Max Bending Moment(kNm)", GH_ParamAccess.item);
+            pManager.AddNumberParameter("Bending Stress", "Sig", "Output Max Bending Stress(N/mm^2)", GH_ParamAccess.item);
+            pManager.AddNumberParameter("Allowable Bending Stress", "fb", "Output Allowable Bending Stress(N/mm^2)", GH_ParamAccess.item);
+            pManager.AddNumberParameter("examination result", "Sig/fb", "Output Max Examination Result", GH_ParamAccess.item);
+            pManager.AddNumberParameter("Deformation", "D", "Output Max Deformation(mm)", GH_ParamAccess.item);
         }
 
         /// <summary>
         /// 計算部分
         /// </summary>
-        /// <param name="Param">断面性能計算コンポーネントからのデータを受け取るためのList</param>
+        /// <param name="DA">インプットパラメータからデータを取得し、出力用のデータを保持するオブジェクト</param>
         protected override void SolveInstance(IGH_DataAccess DA)
         {
             // input
@@ -160,66 +161,69 @@ namespace BeamAnalysis
 
         /// <summary>
         /// コンポーネントを右クリック時に出るコンテキストメニューの編集
+        /// 未完なのでコメントアウト
         /// </summary>
-        public override bool AppendMenuItems(ToolStripDropDown menu)
-        {
-            Menu_AppendObjectName(menu);          // オブジェクト名
-            Menu_AppendSeparator(menu);           // セパレータ
-            Menu_AppendPreviewItem(menu);         // プレビュー
-            Menu_AppendEnableItem(menu);          // Enable (コンポーネントの有効化)
-            Menu_AppendBakeItem(menu);            // ベーク
-            Menu_AppendSeparator(menu);           // セパレータ
-            Menu_AppendItem(menu, "Buckling Consideration",        // 追加部分
-                            Menu_MyCustomItemClicked);
-            Menu_AppendSeparator(menu);           // セパレータ
-            Menu_AppendItem(menu, "test");       // 追加部分
-            Menu_AppendSeparator(menu);           // セパレータ
-            Menu_AppendRuntimeMessages(menu);     // ランタイムメッセージ
-            Menu_AppendSeparator(menu);           // セパレータ
-            Menu_AppendObjectHelp(menu);          // ヘルプ
-            return true;
-        }
+        //      public override bool AppendMenuItems(ToolStripDropDown menu)
+        //      {
+        //          Menu_AppendObjectName(menu);          // オブジェクト名
+        //          Menu_AppendSeparator(menu);           // セパレータ
+        //          Menu_AppendPreviewItem(menu);         // プレビュー
+        //          Menu_AppendEnableItem(menu);          // Enable (コンポーネントの有効化)
+        //          Menu_AppendBakeItem(menu);            // ベーク
+        //          Menu_AppendSeparator(menu);           // セパレータ
+        //          Menu_AppendItem(menu, "Buckling Consideration",        // 追加部分
+        //                          Menu_MyCustomItemClicked);
+        //          Menu_AppendSeparator(menu);           // セパレータ
+        //          Menu_AppendItem(menu, "test");       // 追加部分
+        //          Menu_AppendSeparator(menu);           // セパレータ
+        //          Menu_AppendRuntimeMessages(menu);     // ランタイムメッセージ
+        //          Menu_AppendSeparator(menu);           // セパレータ
+        //          Menu_AppendObjectHelp(menu);          // ヘルプ
+        //          return true;
+        //      }
 
         /// <summary>
         /// 座屈考慮のフラグの処理
         /// このままだとずっとfalseのままなので要修正
+        /// 未完なのでコメントアウト
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        private void Menu_MyCustomItemClicked(Object sender, EventArgs e)
-        {
-            bool BucklingConsideration = false;
+        //      private void Menu_MyCustomItemClicked(Object sender, EventArgs e)
+        //      {
+        //          bool BucklingConsideration = false;
+        //
+        //          if (BucklingConsideration == true)
+        //          {
+        //              BucklingConsideration = true;
+        //          }
+        //          else {
+        //              BucklingConsideration = false;
+        //          }
+        //          string test = BucklingConsideration.ToString();
+        //          Rhino.RhinoApp.WriteLine("BucklingConsideration:"+ test);
+        //      }
 
-            if (BucklingConsideration == true)
-            {
-                BucklingConsideration = true;
-            }
-            else {
-                BucklingConsideration = false;
-            }
-            string test = BucklingConsideration.ToString();
-            Rhino.RhinoApp.WriteLine("BucklingConsideration:"+ test);
-        }
     }
 
 
     public class Beam_TL_Analysis : GH_Component
     {
         /// <summary>
-        /// 名称の設定
+        /// 台形分布荷重の梁の計算
         /// </summary>
         public Beam_TL_Analysis()
-      : base("Trapezoid Load",      // 名称
-             "Trapezoid L",                         // 略称
+      : base("Trapezoid Load",                   // 名称
+             "Trapezoid L",                      // 略称
              "Stress Analysis of the Beam",      // コンポーネントの説明
              "rgkr",                             // カテゴリ(タブの表示名)
-             "Analysis"               // サブカテゴリ(タブ内の表示名)
+             "Analysis"                          // サブカテゴリ(タブ内の表示名)
             )
     {
     }
 
     /// <summary>
-    /// Registers all the input parameters for this component.
+    /// インプットパラメータの登録
     /// </summary>
     protected override void RegisterInputParams(GH_Component.GH_InputParamManager pManager)
     {
@@ -231,22 +235,21 @@ namespace BeamAnalysis
     }
 
     /// <summary>
-    /// Registers all the output parameters for this component.
+    /// アウトプットパラメータの登録
     /// </summary>
     protected override void RegisterOutputParams(GH_Component.GH_OutputParamManager pManager)
     {
-        pManager.AddNumberParameter("Bending Moment", "M", "output max bending moment(kNm)", GH_ParamAccess.item);
-        pManager.AddNumberParameter("Bending Stress", "Sig", "output max bending stress (N/mm^2)", GH_ParamAccess.item);
-        pManager.AddNumberParameter("examination result", "fb", "output max examination result", GH_ParamAccess.item);
-        pManager.AddNumberParameter("examination result", "Sig/fb", "output max examination result", GH_ParamAccess.item);
-        pManager.AddNumberParameter("Deformation", "D", "output max deformation(mm)", GH_ParamAccess.item);
+        pManager.AddNumberParameter("Bending Moment", "M", "Output Max Bending Moment (kNm)", GH_ParamAccess.item);
+        pManager.AddNumberParameter("Bending Stress", "Sig", "Output Max Bending Stress (N/mm^2)", GH_ParamAccess.item);
+        pManager.AddNumberParameter("Allowable Bending Stress", "fb", "Output Allowable Bending Stress (N/mm^2)", GH_ParamAccess.item);
+        pManager.AddNumberParameter("Examination Result", "Sig/fb", "Output Max Examination Result", GH_ParamAccess.item);
+        pManager.AddNumberParameter("Deformation", "D", "Output Max Deformation(mm)", GH_ParamAccess.item);
     }
 
     /// <summary>
-    /// This is the method that actually does the work.
+    /// 計算部分
     /// </summary>
-    /// <param name="DA">The DA object can be used to retrieve data from input parameters and 
-    /// to store data in output parameters.</param>
+    /// <param name="DA">インプットパラメータからデータを取得し、出力用のデータを保持するオブジェクト</param>
     protected override void SolveInstance(IGH_DataAccess DA)
     {
         // input
@@ -288,17 +291,14 @@ namespace BeamAnalysis
         Ra = (W / 1000000) * (L - DW) / 2; // 反力
         Mx = (Ra * L / 4) - ((W / 1000000) * Math.Pow(L / 4, 3) / (6 * DW)); // 1/4点のモーメント計算
 
+        // 出力用の曲げモーメント登録
         M_out.Add(0);
         M_out.Add(Mx);
         M_out.Add(M);
         M_out.Add(Mx);
         M_out.Add(0);
         M_out.Add(L);
-
-        fb1 = (1.0 - 0.4 * (Lb / i_t) * (Lb / i_t) / (C * lamda * lamda)) * F / 1.5;
-        fb2 = 89000.0 / (Lb * H / Af);
-        fb = Math.Min(Math.Max(fb1, fb2), F / 1.5);
-
+            
         // 許容曲げの計算
         if (fb_calc == 0) // H強軸回りの場合
         {
@@ -329,8 +329,7 @@ namespace BeamAnalysis
     }
 
     /// <summary>
-    /// Provides an Icon for every component that will be visible in the User Interface.
-    /// Icons need to be 24x24 pixels.
+    /// アイコンの設定。24x24 pixelsが推奨
     /// </summary>
     protected override System.Drawing.Bitmap Icon
     {
@@ -381,11 +380,11 @@ namespace BeamAnalysis
         /// </summary>
         protected override void RegisterOutputParams(GH_Component.GH_OutputParamManager pManager)
         {
-            pManager.AddNumberParameter("Bending Moment", "M", "output max bending moment(kNm)", GH_ParamAccess.item);
-            pManager.AddNumberParameter("Bending Stress", "Sig", "output max bending stress (N/mm^2)", GH_ParamAccess.item);
-            pManager.AddNumberParameter("examination result", "fb", "output max examination result", GH_ParamAccess.item);
-            pManager.AddNumberParameter("examination result", "Sig/fb", "output max examination result", GH_ParamAccess.item);
-            pManager.AddNumberParameter("Deformation", "D", "output max deformation(mm)", GH_ParamAccess.item);
+            pManager.AddNumberParameter("Bending Moment", "M", "Output Max Bending Moment(kNm)", GH_ParamAccess.item);
+            pManager.AddNumberParameter("Bending Stress", "Sig", "Output Max Bending Stress(N/mm^2)", GH_ParamAccess.item);
+            pManager.AddNumberParameter("Allowable Bending stress", "fb", "Output Allowable Bending Stress(N/mm^2)", GH_ParamAccess.item);
+            pManager.AddNumberParameter("Examination Result", "Sig/fb", "Output Max Examination Result", GH_ParamAccess.item);
+            pManager.AddNumberParameter("Deformation", "D", "Output Max Deformation(mm)", GH_ParamAccess.item);
         }
 
         /// <summary>
@@ -434,10 +433,6 @@ namespace BeamAnalysis
             M_out.Add(M);
             M_out.Add(M);
             M_out.Add(L);
-
-            fb1 = (1.0 - 0.4 * (Lb / i_t) * (Lb / i_t) / (C * lamda * lamda)) * F / 1.5;
-            fb2 = 89000.0 / (Lb * H / Af);
-            fb = Math.Min(Math.Max(fb1, fb2), F / 1.5);
 
             // 許容曲げの計算
             if (fb_calc == 0) // H強軸回りの場合
@@ -631,12 +626,12 @@ namespace ModelDisp
         }
         protected override void RegisterInputParams(GH_InputParamManager pManager)
         {
-            pManager.AddNumberParameter("Width", "B", "Model Width (mm)", GH_ParamAccess.item, 200.0);
-            pManager.AddNumberParameter("Height", "H", "Model High (mm)", GH_ParamAccess.item, 400.0);
-            pManager.AddNumberParameter("Web Thickness", "tw", "Web Thickness (mm)", GH_ParamAccess.item, 8.0);
-            pManager.AddNumberParameter("Flange Thickness", "tf", "Flange Thickness (mm)", GH_ParamAccess.item, 13.0);
+            pManager.AddNumberParameter("Width", "B", "Model Width (mm)", GH_ParamAccess.item, 75.0);
+            pManager.AddNumberParameter("Height", "H", "Model High (mm)", GH_ParamAccess.item, 75.0);
+            pManager.AddNumberParameter("Web Thickness", "tw", "Web Thickness (mm)", GH_ParamAccess.item, 9.0);
+            pManager.AddNumberParameter("Flange Thickness", "tf", "Flange Thickness (mm)", GH_ParamAccess.item, 9.0);
             pManager.AddNumberParameter("F", "F", "F (N/mm2)", GH_ParamAccess.item, 235);
-            pManager.AddNumberParameter("Length", "L", "Model Length (mm)", GH_ParamAccess.item, 6300.0);
+            pManager.AddNumberParameter("Length", "L", "Model Length (mm)", GH_ParamAccess.item, 3000.0);
         }
 
         protected override void RegisterOutputParams(GH_OutputParamManager pManager)
@@ -699,6 +694,9 @@ namespace ModelDisp
             Params.Add(Iy); //  断面二次モーメント
             Params.Add(Zy); //  断面係数
             Params.Add(fb_calc);
+            Params.Add(0);
+            Params.Add(0);
+            Params.Add(0);
 
             // モデルはRhino上に出力するだけなので、とりあえず配列でまとめる
             var model = new PlaneSurface[2];

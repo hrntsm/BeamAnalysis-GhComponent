@@ -347,7 +347,147 @@ namespace BeamAnalysis
     {
         get { return new Guid("621eac11-23fb-445c-9430-44ce37bf9020"); }
     }
-}
+    }
+
+
+    public class Beam_AnyM_Analysis : GH_Component
+    {
+        /// <summary>
+        /// 名称の設定
+        /// </summary>
+        public Beam_AnyM_Analysis()
+      : base("Any Moment",      // 名称
+             "Any M",                         // 略称
+             "Stress Analysis of the Beam",      // コンポーネントの説明
+             "rgkr",                             // カテゴリ(タブの表示名)
+             "Analysis"               // サブカテゴリ(タブ内の表示名)
+            )
+        {
+        }
+
+        /// <summary>
+        /// Registers all the input parameters for this component.
+        /// </summary>
+        protected override void RegisterInputParams(GH_Component.GH_InputParamManager pManager)
+        {
+            pManager.AddNumberParameter("Analysis Parametar", "Param", "Input Analysis Parameter", GH_ParamAccess.list);
+            pManager.AddNumberParameter("Any Moment", "AnyM", "Any Moment (kNm)", GH_ParamAccess.item, 1000);
+            pManager.AddNumberParameter("Lb", "Lb", "Buckling Length (mm)", GH_ParamAccess.item, 0.0);
+            pManager.AddNumberParameter("Young's Modulus", "E", "Young's Modulus (N/mm^2)", GH_ParamAccess.item, 205000);
+        }
+
+        /// <summary>
+        /// Registers all the output parameters for this component.
+        /// </summary>
+        protected override void RegisterOutputParams(GH_Component.GH_OutputParamManager pManager)
+        {
+            pManager.AddNumberParameter("Bending Moment", "M", "output max bending moment(kNm)", GH_ParamAccess.item);
+            pManager.AddNumberParameter("Bending Stress", "Sig", "output max bending stress (N/mm^2)", GH_ParamAccess.item);
+            pManager.AddNumberParameter("examination result", "fb", "output max examination result", GH_ParamAccess.item);
+            pManager.AddNumberParameter("examination result", "Sig/fb", "output max examination result", GH_ParamAccess.item);
+            pManager.AddNumberParameter("Deformation", "D", "output max deformation(mm)", GH_ParamAccess.item);
+        }
+
+        /// <summary>
+        /// This is the method that actually does the work.
+        /// </summary>
+        /// <param name="DA">The DA object can be used to retrieve data from input parameters and 
+        /// to store data in output parameters.</param>
+        protected override void SolveInstance(IGH_DataAccess DA)
+        {
+            // input
+            // パラメータはひとまとめにするため、List にまとめる
+            List<double> Param = new List<double>();
+            List<double> M_out = new List<double>();
+            double Lb = double.NaN;
+            double E = double.NaN;
+            // output
+            double M = double.NaN;
+            double Sig = double.NaN;
+            double D = double.NaN;
+            //
+            double L, Iy, Zy, i_t, lamda, Af, F, H, fb_calc, fb, fb1, fb2;
+            double C = 1.0;
+
+            // Paramは List なので、GetDataList とする。
+            if (!DA.GetDataList(0, Param)) { return; }
+            if (!DA.GetData(1, ref M)) { return; }
+            if (!DA.GetData(2, ref Lb)) { return; }
+            if (!DA.GetData(3, ref E)) { return; }
+
+            H = Param[0];
+            L = Param[1];
+            F = Param[2];
+            Iy = Param[3];
+            Zy = Param[4];
+            fb_calc = Param[5];
+            i_t = Param[6];
+            lamda = Param[7];
+            Af = Param[8];
+
+            Sig = M * 1000000 / Zy;
+            D = 0; 
+
+            M_out.Add(M);
+            M_out.Add(M);
+            M_out.Add(M);
+            M_out.Add(M);
+            M_out.Add(M);
+            M_out.Add(L);
+
+            fb1 = (1.0 - 0.4 * (Lb / i_t) * (Lb / i_t) / (C * lamda * lamda)) * F / 1.5;
+            fb2 = 89000.0 / (Lb * H / Af);
+            fb = Math.Min(Math.Max(fb1, fb2), F / 1.5);
+
+            // 許容曲げの計算
+            if (fb_calc == 0) // H強軸回りの場合
+            {
+                fb1 = (1.0 - 0.4 * (Lb / i_t) * (Lb / i_t) / (C * lamda * lamda)) * F / 1.5;
+                fb2 = 89000.0 / (Lb * H / Af);
+                fb = Math.Min(Math.Max(fb1, fb2), F / 1.5);
+            }
+            else if (fb_calc == 1) // 箱型丸型の場合
+            {
+                fb = F / 1.5;
+            }
+            else if (fb_calc == 2) // L型等非対称断面の場合
+            {
+                fb2 = 89000.0 / (Lb * H / Af);
+                fb = Math.Min(fb2, F / 1.5);
+            }
+            else // エラー用　sig/fb が inf になるように 0指定
+            {
+                fb = 0.0;
+            }
+
+            // 出力設定
+            DA.SetDataList(0, M_out);
+            DA.SetData(1, Sig);
+            DA.SetData(2, fb);
+            DA.SetData(3, Sig / fb);
+            DA.SetData(4, D);
+        }
+
+        /// <summary>
+        /// Provides an Icon for every component that will be visible in the User Interface.
+        /// Icons need to be 24x24 pixels.
+        /// </summary>
+        protected override System.Drawing.Bitmap Icon
+        {
+            get
+            {
+                return BeamAnalysis.Properties.Resource.AnyM_icon;
+            }
+        }
+
+        /// <summary>
+        /// GUIDの設定
+        /// </summary>
+        public override Guid ComponentGuid
+        {
+            get { return new Guid("621eac11-23fb-445c-9430-44ce37ba9020"); }
+        }
+    }
 }
 
 /// <summary>
@@ -751,9 +891,10 @@ namespace ResultView
             L = M[5];
 
             // モーメント図の作成
-            var M12_P1 = new Point3d(0, 0, Sc * -M1);
-            var M12_P2 = new Point3d(0, L / 4, Sc * -M2);
-            var M12_P3 = new Point3d(0, L / 4, 0);
+            var M12_P1 = new Point3d(0, 0, 0);
+            var M12_P2 = new Point3d(0, 0, Sc * -M1);
+            var M12_P3 = new Point3d(0, L / 4, Sc * -M2);
+            var M12_P4 = new Point3d(0, L / 4, 0);
             //
             var M23_P1 = new Point3d(0, L / 4, 0);
             var M23_P2 = new Point3d(0, L / 4, Sc * -M2);
@@ -768,11 +909,12 @@ namespace ResultView
             var M45_P1 = new Point3d(0, 3 * L / 4, 0);
             var M45_P2 = new Point3d(0, 3 * L / 4, Sc * -M4);
             var M45_P3 = new Point3d(0, L, Sc * -M5);
+            var M45_P4 = new Point3d(0, L, 0);
 
-            Brep M12_brep = Brep.CreateFromCornerPoints(M12_P1, M12_P2, M12_P3, GH_Component.DocumentTolerance());
+            Brep M12_brep = Brep.CreateFromCornerPoints(M12_P1, M12_P2, M12_P3, M12_P4, GH_Component.DocumentTolerance());
             Brep M23_brep = Brep.CreateFromCornerPoints(M23_P1, M23_P2, M23_P3, M23_P4, GH_Component.DocumentTolerance());
             Brep M34_brep = Brep.CreateFromCornerPoints(M34_P1, M34_P2, M34_P3, M34_P4, GH_Component.DocumentTolerance());
-            Brep M45_brep = Brep.CreateFromCornerPoints(M45_P1, M45_P2, M45_P3, GH_Component.DocumentTolerance());
+            Brep M45_brep = Brep.CreateFromCornerPoints(M45_P1, M45_P2, M45_P3, M45_P4, GH_Component.DocumentTolerance());
 
             // モデルはRhino上に出力するだけなので、とりあえず配列でまとめる
             var brep = new Brep[4];

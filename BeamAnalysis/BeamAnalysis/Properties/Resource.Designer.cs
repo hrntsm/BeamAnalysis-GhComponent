@@ -63,6 +63,16 @@ namespace BeamAnalysis.Properties {
         /// <summary>
         ///   型 System.Drawing.Bitmap のローカライズされたリソースを検索します。
         /// </summary>
+        internal static System.Drawing.Bitmap AnyM_icon {
+            get {
+                object obj = ResourceManager.GetObject("AnyM_icon", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   型 System.Drawing.Bitmap のローカライズされたリソースを検索します。
+        /// </summary>
         internal static System.Drawing.Bitmap BOX_icon {
             get {
                 object obj = ResourceManager.GetObject("BOX_icon", resourceCulture);

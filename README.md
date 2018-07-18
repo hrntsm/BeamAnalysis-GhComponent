@@ -2,6 +2,26 @@
 grasshopperで梁の解析をするコンポーネントです。  
 It is a component analyzing the beam in grasshopper.
 
+![コンポーネント画像](https://github.com/hiro-n-rgkr/BeamAnalysis/blob/master/BeamAnalysis/BeamAnalysis/images/md_image.jpg)
+
+#### コンポーネントについて 
++ コンポーネント一覧
+
+![コンポーネント一覧](https://github.com/hiro-n-rgkr/BeamAnalysis/blob/master/BeamAnalysis/BeamAnalysis/images/ListOfComponents.JPG)
+
++ Analysisタブ
+  + Any Moment コンポーネント：任意の直接入力のモーメントに対して計算
+  + Centralized Load コンポーネント：中央集中荷重に対して計算
+  + Trapezoid Load コンポーネント：台形分布荷重に対して計算
+
++ CrossSectionタブ
+  + Box Shape コンポーネント：箱型断面の断面に関する諸元を計算
+  + H Shape コンポーネント：H型断面の断面に関する諸元を計算
+  + L Shape コンポーネント：L型断面の断面に関する諸元を計算
+
++ Resultタブ
+  + Moment View コンポーネント：入力されたモーメントをRhino上表示
+
 #### 開発状況 
 + ~2018/07/16
   + ver0.1.00 直接入力のモーメントに対して計算するコンポーネント追加。

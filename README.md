@@ -14,13 +14,18 @@ It is a component analyzing the beam in grasshopper.
   + Centralized Load コンポーネント：中央集中荷重に対して計算
   + Trapezoid Load コンポーネント：台形分布荷重に対して計算
 
+![Analysisタブコンポーネント一覧](https://github.com/hiro-n-rgkr/BeamAnalysis/blob/master/BeamAnalysis/BeamAnalysis/images/AnalysisTab.JPG)
 + CrossSectionタブ
   + Box Shape コンポーネント：箱型断面の断面に関する諸元を計算
   + H Shape コンポーネント：H型断面の断面に関する諸元を計算
   + L Shape コンポーネント：L型断面の断面に関する諸元を計算
 
+![Analysisタブコンポーネント一覧](https://github.com/hiro-n-rgkr/BeamAnalysis/blob/master/BeamAnalysis/BeamAnalysis/images/CrossSectioTab.JPG)
+
 + Resultタブ
   + Moment View コンポーネント：入力されたモーメントをRhino上表示
+
+![Analysisタブコンポーネント一覧](https://github.com/hiro-n-rgkr/BeamAnalysis/blob/master/BeamAnalysis/BeamAnalysis/images/ResultTab.JPG)
 
 #### 開発状況 
 + ~2018/07/16

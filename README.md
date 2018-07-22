@@ -27,7 +27,9 @@ It is a component analyzing the beam in grasshopper.
 
 ![Analysisタブコンポーネント一覧](https://github.com/hiro-n-rgkr/BeamAnalysis/blob/master/BeamAnalysis/BeamAnalysis/images/ResultTab.JPG)
 
-#### 開発状況 
+#### 開発状況
++ ~2018/07/22
+  + ver0.1.01 台形分布荷重の計算のバグを修正。 
 + ~2018/07/16
   + ver0.1.00 直接入力のモーメントに対して計算するコンポーネント追加。
   リリース用に中身を若干整理し、masterにマージ

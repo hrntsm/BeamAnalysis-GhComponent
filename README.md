@@ -1,7 +1,7 @@
 # BeamAnalysis
-grasshopperで梁の解析をするコンポーネントです。MITライセンスで公開しています。詳細はLICENSEを見てください。  
+grasshopperで梁の解析をするコンポーネントです。MITライセンスのもとで公開しています。詳細はLICENSE.mdを見てください。  
 It is a component analyzing the beam in grasshopper.
-This software is released under the MIT License, see LICENSE.
+This software is released under the MIT License, see LICENSE.md
 
 ![コンポーネント画像](https://github.com/hiro-n-rgkr/BeamAnalysis/blob/master/BeamAnalysis/BeamAnalysis/images/md_image.jpg)
 

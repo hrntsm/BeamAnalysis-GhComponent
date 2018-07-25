@@ -32,6 +32,8 @@ This software is released under the MIT License, see LICENSE.
 ![Analysisタブコンポーネント一覧](https://github.com/hiro-n-rgkr/BeamAnalysis/blob/master/BeamAnalysis/BeamAnalysis/images/ResultTab.JPG)
 
 #### 開発状況
++ ~2018/07/25
+  + ver0.1.02 ライセンスに関する表記を追加(MITライセンス) 
 + ~2018/07/22
   + ver0.1.01 台形分布荷重の計算のバグを修正。 
 + ~2018/07/16

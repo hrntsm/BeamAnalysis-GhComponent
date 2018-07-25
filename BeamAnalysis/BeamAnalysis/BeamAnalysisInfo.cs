@@ -26,7 +26,7 @@ namespace BeamAnalysis
             get
             {
                 //Return a short string describing the purpose of this GHA library.
-                return "";
+                return "Stress Analysis of the Simple Beam";
             }
         }
         public override Guid Id
@@ -42,7 +42,7 @@ namespace BeamAnalysis
             get
             {
                 //Return a string identifying you or your company.
-                return "";
+                return "hiron_rgrk";
             }
         }
         public override string AuthorContact
@@ -50,7 +50,7 @@ namespace BeamAnalysis
             get
             {
                 //Return a string representing your preferred contact details.
-                return "";
+                return "hiro.n.rgrk@gmail.com";
             }
         }
     }

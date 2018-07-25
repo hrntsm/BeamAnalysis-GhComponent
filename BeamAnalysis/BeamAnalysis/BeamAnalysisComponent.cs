@@ -1,4 +1,11 @@
-﻿using System;
+﻿/**
+Copyright (c) 2018 hiron_rgrk
+
+This software is released under the MIT License.
+See LICENSE
+*/
+
+using System;
 using System.Drawing;
 using System.Windows.Forms;
 using System.Collections.Generic;

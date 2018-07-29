@@ -19,13 +19,3 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
-
-***
-
-無保証です。自己責任で使用してください。
-コンポーネントを使用したことによる、いかなる損害・トラブルについても責任を負いません。
-
-ソースコードについて
-・無保証です。
-・ソースコードを使用したことによるいかなる損害・トラブルについてhiron_rgrkは責任を負いません。
-以上に了解して頂ける場合、ソースコードの使用、複製、改変、再頒布を行って頂いて構いません。

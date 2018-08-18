@@ -19,6 +19,7 @@ This software is released under the MIT License, see LICENSE.md
   + Any Moment コンポーネント：任意の直接入力のモーメントに対して計算
   + Centralized Load コンポーネント：中央集中荷重に対して計算
   + Trapezoid Load コンポーネント：台形分布荷重に対して計算
+  + Cantilever Ponit Load コンポーネント：片持ち梁先端荷重に対して計算
 
 ![Analysisタブコンポーネント一覧](https://github.com/hiro-n-rgkr/BeamAnalysis/blob/master/BeamAnalysis/BeamAnalysis/images/AnalysisTab.JPG)
 + CrossSectionタブ
@@ -35,6 +36,8 @@ This software is released under the MIT License, see LICENSE.md
 ![Analysisタブコンポーネント一覧](https://github.com/hiro-n-rgkr/BeamAnalysis/blob/master/BeamAnalysis/BeamAnalysis/images/ResultTab.JPG)
 
 ## 開発状況
++ ~2018/08/18
+  + ver0.1.03 片持ち梁の計算に対応 
 + ~2018/07/25
   + ver0.1.02 ライセンスに関する表記を追加(MITライセンス) 
 + ~2018/07/22

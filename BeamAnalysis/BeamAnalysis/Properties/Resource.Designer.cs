@@ -47,7 +47,7 @@ namespace BeamAnalysis.Properties {
         }
         
         /// <summary>
-        ///   厳密に型指定されたこのリソース クラスを使用して、すべての検索リソースに対し、
+        ///   すべてについて、現在のスレッドの CurrentUICulture プロパティをオーバーライドします
         ///   現在のスレッドの CurrentUICulture プロパティをオーバーライドします。
         /// </summary>
         [global::System.ComponentModel.EditorBrowsableAttribute(global::System.ComponentModel.EditorBrowsableState.Advanced)]
@@ -76,6 +76,16 @@ namespace BeamAnalysis.Properties {
         internal static System.Drawing.Bitmap BOX_icon {
             get {
                 object obj = ResourceManager.GetObject("BOX_icon", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   型 System.Drawing.Bitmap のローカライズされたリソースを検索します。
+        /// </summary>
+        internal static System.Drawing.Bitmap CantiPL_icon {
+            get {
+                object obj = ResourceManager.GetObject("CantiPL_icon", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }

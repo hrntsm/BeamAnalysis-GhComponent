@@ -194,127 +194,244 @@ namespace BeamAnalysis
 
     }
 
-
     public class Beam_TL_Analysis : GH_Component
     {
         /// <summary>
         /// 台形分布荷重の梁の計算
         /// </summary>
         public Beam_TL_Analysis()
-      : base("Trapezoid Load",                   // 名称
-             "Trapezoid L",                      // 略称
-             "Stress Analysis of the Beam",      // コンポーネントの説明
-             "rgkr",                             // カテゴリ(タブの表示名)
-             "Beam Analysis"                     // サブカテゴリ(タブ内の表示名)
-            )
-    {
-    }
-
-    /// <summary>
-    /// インプットパラメータの登録
-    /// </summary>
-    protected override void RegisterInputParams(GH_Component.GH_InputParamManager pManager)
-    {
-        pManager.AddNumberParameter("Analysis Parametar", "Param", "Input Analysis Parameter", GH_ParamAccess.list);
-        pManager.AddNumberParameter("Trapezoid Load", "W", "Trapezoid Load (kN/m^2)", GH_ParamAccess.item, 10);
-        pManager.AddNumberParameter("D Width", "DW", "Domination Width (mm)", GH_ParamAccess.item, 1800);
-        pManager.AddNumberParameter("Lb", "Lb", "Buckling Length (mm)", GH_ParamAccess.item, 0.0);
-        pManager.AddNumberParameter("Young's Modulus", "E", "Young's Modulus (N/mm^2)", GH_ParamAccess.item, 205000);
-    }
-
-    /// <summary>
-    /// アウトプットパラメータの登録
-    /// </summary>
-    protected override void RegisterOutputParams(GH_Component.GH_OutputParamManager pManager)
-    {
-        pManager.AddNumberParameter("Bending Moment", "M", "Output Max Bending Moment (kNm)", GH_ParamAccess.item);
-        pManager.AddNumberParameter("Bending Stress", "Sig", "Output Max Bending Stress (N/mm^2)", GH_ParamAccess.item);
-        pManager.AddNumberParameter("Allowable Bending Stress", "fb", "Output Allowable Bending Stress (N/mm^2)", GH_ParamAccess.item);
-        pManager.AddNumberParameter("Examination Result", "Sig/fb", "Output Max Examination Result", GH_ParamAccess.item);
-        pManager.AddNumberParameter("Deformation", "D", "Output Max Deformation(mm)", GH_ParamAccess.item);
-    }
-
-    /// <summary>
-    /// 計算部分
-    /// </summary>
-    /// <param name="DA">インプットパラメータからデータを取得し、出力用のデータを保持するオブジェクト</param>
-    protected override void SolveInstance(IGH_DataAccess DA)
-    {
-        // 引数の宣言＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝
-        // input
-        List<double> Param = new List<double>();
-        List<double> M_out = new List<double>();
-        double W = double.NaN;
-        double DW = double.NaN;
-        double Lb = double.NaN;
-        double E = double.NaN;
-        // output
-        double M = double.NaN;
-        double Sig = double.NaN;
-        double D = double.NaN;
-        //
-        double L, Iy, Zy, Ra, Mx;
-        double C = 1.0;
-        double fb = 0.0;
-            
-        // 入力設定＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝
-        if (!DA.GetDataList(0, Param)) { return; }
-        if (!DA.GetData(1, ref W)) { return; }
-        if (!DA.GetData(2, ref DW)) { return; }
-        if (!DA.GetData(3, ref Lb)) { return; }
-        if (!DA.GetData(4, ref E)) { return; }
-        
-        // 必要な引数の割り当て＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝
-        L = Param[1];
-        Iy = Param[3];
-        Zy = Param[4];
-
-        // 梁の計算箇所＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝
-        M = ((W * (DW / 1000)) / 24 * (3 * L * L - 4 * DW * DW))/1000000;
-        Sig = M * 1000000 / Zy;
-        D = (W*(DW/1000)) / (1920 * E * Iy) * (5 * L * L - 4 * DW * DW) * (5 * L * L - 4 * DW * DW);
-        Ra = (W* (DW / 1000)) * (L - DW) / 2; // 反力
-        Mx = ((Ra * L / 4) - ((W * (DW / 1000)) * Math.Pow(L / 4, 3) / (6 * DW)))/1000000; // 1/4点のモーメント計算
-
-        // モーメントの出力＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝
-        M_out.Add(0);
-        M_out.Add(Mx);
-        M_out.Add(M);
-        M_out.Add(Mx);
-        M_out.Add(0);
-        M_out.Add(L);
-     
-        // 許容曲げの計算 ＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝
-        Solver.Calc_fb_solver slv = new Solver.Calc_fb_solver();
-        slv.Calc_fb( Param, Lb, C, ref fb);
-
-        // 出力設定＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝
-        DA.SetDataList(0, M_out);
-        DA.SetData(1, Sig);
-        DA.SetData(2, fb);
-        DA.SetData(3, Sig / fb);
-        DA.SetData(4, D);
-    }
-
-    /// <summary>
-    /// アイコンの設定。24x24 pixelsが推奨
-    /// </summary>
-    protected override System.Drawing.Bitmap Icon
-    {
-        get
+        : base("Trapezoid Load",                   // 名称
+                "Trapezoid L",                      // 略称
+                "Stress Analysis of the Beam",      // コンポーネントの説明
+                "rgkr",                             // カテゴリ(タブの表示名)
+                "Beam Analysis"                     // サブカテゴリ(タブ内の表示名)
+            　)
         {
-            return BeamAnalysis.Properties.Resource.UL_icon;
+        }
+
+        /// <summary>
+        /// インプットパラメータの登録
+        /// </summary>
+        protected override void RegisterInputParams(GH_Component.GH_InputParamManager pManager)
+        {
+            pManager.AddNumberParameter("Analysis Parametar", "Param", "Input Analysis Parameter", GH_ParamAccess.list);
+            pManager.AddNumberParameter("Trapezoid Load", "W", "Trapezoid Load (kN/m^2)", GH_ParamAccess.item, 10);
+            pManager.AddNumberParameter("D Width", "DW", "Domination Width (mm)", GH_ParamAccess.item, 1800);
+            pManager.AddNumberParameter("Lb", "Lb", "Buckling Length (mm)", GH_ParamAccess.item, 0.0);
+            pManager.AddNumberParameter("Young's Modulus", "E", "Young's Modulus (N/mm^2)", GH_ParamAccess.item, 205000);
+        }
+
+        /// <summary>
+        /// アウトプットパラメータの登録
+        /// </summary>
+        protected override void RegisterOutputParams(GH_Component.GH_OutputParamManager pManager)
+        {
+            pManager.AddNumberParameter("Bending Moment", "M", "Output Max Bending Moment (kNm)", GH_ParamAccess.item);
+            pManager.AddNumberParameter("Bending Stress", "Sig", "Output Max Bending Stress (N/mm^2)", GH_ParamAccess.item);
+            pManager.AddNumberParameter("Allowable Bending Stress", "fb", "Output Allowable Bending Stress (N/mm^2)", GH_ParamAccess.item);
+            pManager.AddNumberParameter("Examination Result", "Sig/fb", "Output Max Examination Result", GH_ParamAccess.item);
+            pManager.AddNumberParameter("Deformation", "D", "Output Max Deformation(mm)", GH_ParamAccess.item);
+        }
+
+        /// <summary>
+        /// 計算部分
+        /// </summary>
+        /// <param name="DA">インプットパラメータからデータを取得し、出力用のデータを保持するオブジェクト</param>
+        protected override void SolveInstance(IGH_DataAccess DA)
+        {
+            // 引数の宣言＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝
+            // input
+            List<double> Param = new List<double>();
+            List<double> M_out = new List<double>();
+            double W = double.NaN;
+            double DW = double.NaN;
+            double Lb = double.NaN;
+            double E = double.NaN;
+            // output
+            double M = double.NaN;
+            double Sig = double.NaN;
+            double D = double.NaN;
+            //
+            double L, Iy, Zy, Ra, Mx;
+            double C = 1.0;
+            double fb = 0.0;
+            
+            // 入力設定＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝
+            if (!DA.GetDataList(0, Param)) { return; }
+            if (!DA.GetData(1, ref W)) { return; }
+            if (!DA.GetData(2, ref DW)) { return; }
+            if (!DA.GetData(3, ref Lb)) { return; }
+            if (!DA.GetData(4, ref E)) { return; }
+        
+            // 必要な引数の割り当て＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝
+            L = Param[1];
+            Iy = Param[3];
+            Zy = Param[4];
+
+            // 梁の計算箇所＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝
+            M = ((W * (DW / 1000)) / 24 * (3 * L * L - 4 * DW * DW))/1000000;
+            Sig = M * 1000000 / Zy;
+            D = (W*(DW/1000)) / (1920 * E * Iy) * (5 * L * L - 4 * DW * DW) * (5 * L * L - 4 * DW * DW);
+            Ra = (W* (DW / 1000)) * (L - DW) / 2; // 反力
+            Mx = ((Ra * L / 4) - ((W * (DW / 1000)) * Math.Pow(L / 4, 3) / (6 * DW)))/1000000; // 1/4点のモーメント計算
+
+            // モーメントの出力＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝
+            M_out.Add(0);
+            M_out.Add(Mx);
+            M_out.Add(M);
+            M_out.Add(Mx);
+            M_out.Add(0);
+            M_out.Add(L);
+     
+            // 許容曲げの計算 ＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝
+            Solver.Calc_fb_solver slv = new Solver.Calc_fb_solver();
+            slv.Calc_fb( Param, Lb, C, ref fb);
+
+            // 出力設定＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝
+            DA.SetDataList(0, M_out);
+            DA.SetData(1, Sig);
+            DA.SetData(2, fb);
+            DA.SetData(3, Sig / fb);
+            DA.SetData(4, D);
+        }
+
+        /// <summary>
+        /// アイコンの設定。24x24 pixelsが推奨
+        /// </summary>
+        protected override System.Drawing.Bitmap Icon
+        {
+            get
+            {
+                return BeamAnalysis.Properties.Resource.UL_icon;
+            }
+        }
+
+        /// <summary>
+        /// GUIDの設定
+        /// </summary>
+        public override Guid ComponentGuid
+        {
+            get { return new Guid("621eac11-23fb-445c-9430-44ce37bf9020"); }
         }
     }
 
-    /// <summary>
-    /// GUIDの設定
-    /// </summary>
-    public override Guid ComponentGuid
+    public class Beam_Canti_Analysis : GH_Component
     {
-        get { return new Guid("621eac11-23fb-445c-9430-44ce37bf9020"); }
+        /// <summary>
+        /// 台形分布荷重の梁の計算
+        /// </summary>
+        public Beam_Canti_Analysis()
+         : base("Cantilever Point Load",            // 名称
+                "Canti PL",                         // 略称
+                "Stress Analysis of the Beam",      // コンポーネントの説明
+                "rgkr",                             // カテゴリ(タブの表示名)
+                "Beam Analysis"                     // サブカテゴリ(タブ内の表示名)
+            　)
+        {
+        }
+
+        /// <summary>
+        /// インプットパラメータの登録
+        /// </summary>
+        protected override void RegisterInputParams(GH_Component.GH_InputParamManager pManager)
+        {
+            pManager.AddNumberParameter("Analysis Parametar", "Param", "Input Analysis Parameter", GH_ParamAccess.list);
+            pManager.AddNumberParameter("Point Load", "P", "Point Load (kN)", GH_ParamAccess.item, 10);
+            pManager.AddNumberParameter("Lb", "Lb", "Buckling Length (mm)", GH_ParamAccess.item, 0.0);
+            pManager.AddNumberParameter("Young's Modulus", "E", "Young's Modulus (N/mm^2)", GH_ParamAccess.item, 205000);
+        }
+
+        /// <summary>
+        /// アウトプットパラメータの登録
+        /// </summary>
+        protected override void RegisterOutputParams(GH_Component.GH_OutputParamManager pManager)
+        {
+            pManager.AddNumberParameter("Bending Moment", "M", "Output Max Bending Moment (kNm)", GH_ParamAccess.item);
+            pManager.AddNumberParameter("Bending Stress", "Sig", "Output Max Bending Stress (N/mm^2)", GH_ParamAccess.item);
+            pManager.AddNumberParameter("Allowable Bending Stress", "fb", "Output Allowable Bending Stress (N/mm^2)", GH_ParamAccess.item);
+            pManager.AddNumberParameter("Examination Result", "Sig/fb", "Output Max Examination Result", GH_ParamAccess.item);
+            pManager.AddNumberParameter("Deformation", "D", "Output Max Deformation(mm)", GH_ParamAccess.item);
+        }
+
+        /// <summary>
+        /// 計算部分
+        /// </summary>
+        /// <param name="DA">インプットパラメータからデータを取得し、出力用のデータを保持するオブジェクト</param>
+        protected override void SolveInstance(IGH_DataAccess DA)
+        {
+            // 引数の宣言＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝
+            // input
+            List<double> Param = new List<double>();
+            List<double> M_out = new List<double>();
+            double P = double.NaN;
+            double Lb = double.NaN;
+            double E = double.NaN;
+            // output
+            double M = double.NaN;
+            double Sig = double.NaN;
+            double D = double.NaN;
+            //
+            double L, Iy, Zy;
+            double C = 1.0;
+            double fb = 0.0;
+
+            // 入力設定＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝
+            if (!DA.GetDataList(0, Param)) { return; }
+            if (!DA.GetData(1, ref P)) { return; }
+            if (!DA.GetData(2, ref Lb)) { return; }
+            if (!DA.GetData(3, ref E)) { return; }
+
+            // 必要な引数の割り当て＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝
+            L = Param[1];
+            Iy = Param[3];
+            Zy = Param[4];
+
+            // 梁の計算箇所＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝
+            M =  P * L/ 1000;
+            Sig = M * 1000000 / Zy;
+            D = (P /1000) * L * L * L / (3.0 * E * Iy); 
+
+            // モーメントの出力＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝
+            M_out.Add(-M);
+            M_out.Add(-M * 3/4);
+            M_out.Add(-M * 1/2);
+            M_out.Add(-M * 1/4);
+            M_out.Add(0);
+            M_out.Add(L);
+
+            // 許容曲げの計算 ＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝
+            Solver.Calc_fb_solver slv = new Solver.Calc_fb_solver();
+            slv.Calc_fb(Param, Lb, C, ref fb);
+
+            // 出力設定＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝
+            DA.SetDataList(0, M_out);
+            DA.SetData(1, Sig);
+            DA.SetData(2, fb);
+            DA.SetData(3, Sig / fb);
+            DA.SetData(4, D);
+        }
+
+        /// <summary>
+        /// アイコンの設定。24x24 pixelsが推奨
+        /// </summary>
+        protected override System.Drawing.Bitmap Icon
+        {
+            get
+            {
+                return BeamAnalysis.Properties.Resource.CantiPL_icon;
+            }
+        }
+
+        /// <summary>
+        /// GUIDの設定
+        /// </summary>
+        public override Guid ComponentGuid
+        {
+            get { return new Guid("621eac11-23fb-445c-9430-44ce37bf9031"); }
+        }
     }
-    }
+
+
 
 
     public class Beam_AnyM_Analysis : GH_Component

@@ -3,7 +3,7 @@ Copyright (c) 2018 hiron_rgrk
 
 This software is released under the MIT License.
 See LICENSE
-*/
+**/
 
 using System;
 using System.Drawing;
@@ -34,7 +34,7 @@ namespace BeamAnalysis
                  "Centralized L",                    // 略称
                  "Stress Analysis of the Beam",      // コンポーネントの説明
                  "rgkr",                             // カテゴリ(タブの表示名)
-                 "Analysis"                          // サブカテゴリ(タブ内の表示名)
+                 "Beam Analysis"                     // サブカテゴリ(タブ内の表示名)
                 )
         {
         }
@@ -76,8 +76,8 @@ namespace BeamAnalysis
         /// <param name="DA">インプットパラメータからデータを取得し、出力用のデータを保持するオブジェクト</param>
         protected override void SolveInstance(IGH_DataAccess DA)
         {
+            // 引数の宣言＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝
             // input
-            // パラメータはひとまとめにするため、List にまとめる
             List<double> Param = new List<double>();
             List<double> M_out = new List<double>();
             double P = double.NaN;
@@ -88,29 +88,27 @@ namespace BeamAnalysis
             double Sig = double.NaN;
             double D = double.NaN;
             //
-            double L, Iy, Zy, i_t, lamda, Af, F, H, fb_calc, fb, fb1, fb2;
+            double L, Iy, Zy;
             double C = 1.0;
-            
-            // Paramは List なので、GetDataList とする。
+            double fb = 0.0;
+
+            // 入力設定＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝
             if (!DA.GetDataList(0, Param)) { return; }
             if (!DA.GetData(1, ref P)) { return; }
             if (!DA.GetData(2, ref Lb)) { return; }
             if (!DA.GetData(3, ref E)) { return; }
 
-            H = Param[0];
+            // 必要な引数の割り当て＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝
             L = Param[1];
-            F = Param[2];
             Iy = Param[3];
             Zy = Param[4];
-            fb_calc = Param[5];
-            i_t = Param[6];
-            lamda = Param[7];
-            Af = Param[8];
 
+            // 梁の計算箇所＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝
             M = P * (L / 1000) / 4;
             Sig = M * 1000000 / Zy;
             D = P * 1000 * L * L * L / (48 * E * Iy);
 
+            // モーメントの出力＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝
             M_out.Add(0);
             M_out.Add(M / 2);
             M_out.Add(M);
@@ -118,28 +116,11 @@ namespace BeamAnalysis
             M_out.Add(0);
             M_out.Add(L);
 
-            // 許容曲げの計算
-            if (fb_calc == 0) // H強軸回りの場合
-            {
-                fb1 = (1.0 - 0.4 * (Lb / i_t) * (Lb / i_t) / (C * lamda * lamda)) * F / 1.5;
-                fb2 = 89000.0 / (Lb * H / Af);
-                fb = Math.Min(Math.Max(fb1, fb2), F / 1.5);
-            }
-            else if (fb_calc == 1) // 箱型丸型の場合
-            {
-                fb = F / 1.5;
-            }
-            else if (fb_calc == 2) // L型等非対称断面の場合
-            {
-                fb2 = 89000.0 / (Lb * H / Af);
-                fb = Math.Min(fb2, F / 1.5);
-            }
-            else // エラー用　sig/fb が inf になるように 0指定
-            {
-                fb = 0.0;
-            }
+            // 許容曲げの計算＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝
+            Solver.Calc_fb_solver slv = new Solver.Calc_fb_solver();
+            slv.Calc_fb(Param, Lb, C, ref fb);
 
-            // 出力設定
+            // 出力設定＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝
             DA.SetDataList(0, M_out);
             DA.SetData(1, Sig);
             DA.SetData(2, fb);
@@ -224,7 +205,7 @@ namespace BeamAnalysis
              "Trapezoid L",                      // 略称
              "Stress Analysis of the Beam",      // コンポーネントの説明
              "rgkr",                             // カテゴリ(タブの表示名)
-             "Analysis"                          // サブカテゴリ(タブ内の表示名)
+             "Beam Analysis"                     // サブカテゴリ(タブ内の表示名)
             )
     {
     }
@@ -259,8 +240,8 @@ namespace BeamAnalysis
     /// <param name="DA">インプットパラメータからデータを取得し、出力用のデータを保持するオブジェクト</param>
     protected override void SolveInstance(IGH_DataAccess DA)
     {
+        // 引数の宣言＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝
         // input
-        // パラメータはひとまとめにするため、List にまとめる
         List<double> Param = new List<double>();
         List<double> M_out = new List<double>();
         double W = double.NaN;
@@ -272,62 +253,42 @@ namespace BeamAnalysis
         double Sig = double.NaN;
         double D = double.NaN;
         //
-        double L, Iy, Zy, i_t, lamda, Af, F, H, fb_calc, fb, fb1, fb2, Ra, Mx;
+        double L, Iy, Zy, Ra, Mx;
         double C = 1.0;
-
-        // Paramは List なので、GetDataList とする。
+        double fb = 0.0;
+            
+        // 入力設定＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝
         if (!DA.GetDataList(0, Param)) { return; }
         if (!DA.GetData(1, ref W)) { return; }
         if (!DA.GetData(2, ref DW)) { return; }
         if (!DA.GetData(3, ref Lb)) { return; }
         if (!DA.GetData(4, ref E)) { return; }
-
-        H = Param[0];
+        
+        // 必要な引数の割り当て＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝
         L = Param[1];
-        F = Param[2];
         Iy = Param[3];
         Zy = Param[4];
-        fb_calc = Param[5];
-        i_t = Param[6];
-        lamda = Param[7];
-        Af = Param[8];
 
+        // 梁の計算箇所＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝
         M = ((W * (DW / 1000)) / 24 * (3 * L * L - 4 * DW * DW))/1000000;
         Sig = M * 1000000 / Zy;
         D = (W*(DW/1000)) / (1920 * E * Iy) * (5 * L * L - 4 * DW * DW) * (5 * L * L - 4 * DW * DW);
         Ra = (W* (DW / 1000)) * (L - DW) / 2; // 反力
         Mx = ((Ra * L / 4) - ((W * (DW / 1000)) * Math.Pow(L / 4, 3) / (6 * DW)))/1000000; // 1/4点のモーメント計算
 
-        // 出力用の曲げモーメント登録
+        // モーメントの出力＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝
         M_out.Add(0);
         M_out.Add(Mx);
         M_out.Add(M);
         M_out.Add(Mx);
         M_out.Add(0);
         M_out.Add(L);
-            
-        // 許容曲げの計算
-        if (fb_calc == 0) // H強軸回りの場合
-        {
-            fb1 = (1.0 - 0.4 * (Lb / i_t) * (Lb / i_t) / (C * lamda * lamda)) * F / 1.5;
-            fb2 = 89000.0 / (Lb * H / Af);
-            fb = Math.Min(Math.Max(fb1, fb2), F / 1.5);
-        }
-        else if (fb_calc == 1) // 箱型丸型の場合
-        {
-            fb = F / 1.5;
-        }
-        else if (fb_calc == 2) // L型等非対称断面の場合
-        {
-            fb2 = 89000.0 / (Lb * H / Af);
-            fb = Math.Min(fb2, F / 1.5);
-        }
-        else // エラー用　sig/fb が inf になるように 0指定
-        {
-            fb = 0.0;
-        }
+     
+        // 許容曲げの計算 ＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝
+        Solver.Calc_fb_solver slv = new Solver.Calc_fb_solver();
+        slv.Calc_fb( Param, Lb, C, ref fb);
 
-        // 出力設定
+        // 出力設定＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝
         DA.SetDataList(0, M_out);
         DA.SetData(1, Sig);
         DA.SetData(2, fb);
@@ -362,17 +323,17 @@ namespace BeamAnalysis
         /// 名称の設定
         /// </summary>
         public Beam_AnyM_Analysis()
-      : base("Any Moment",      // 名称
-             "Any M",                         // 略称
+      : base("Any Moment",     　　　　　        // 名称
+             "Any M",                            // 略称
              "Stress Analysis of the Beam",      // コンポーネントの説明
              "rgkr",                             // カテゴリ(タブの表示名)
-             "Analysis"               // サブカテゴリ(タブ内の表示名)
+             "Beam Analysis"                     // サブカテゴリ(タブ内の表示名)
             )
         {
         }
 
         /// <summary>
-        /// Registers all the input parameters for this component.
+        /// インプットパラメータの登録
         /// </summary>
         protected override void RegisterInputParams(GH_Component.GH_InputParamManager pManager)
         {
@@ -383,7 +344,7 @@ namespace BeamAnalysis
         }
 
         /// <summary>
-        /// Registers all the output parameters for this component.
+        /// アウトプットパラメータの登録
         /// </summary>
         protected override void RegisterOutputParams(GH_Component.GH_OutputParamManager pManager)
         {
@@ -395,14 +356,13 @@ namespace BeamAnalysis
         }
 
         /// <summary>
-        /// This is the method that actually does the work.
+        /// 計算部分
         /// </summary>
-        /// <param name="DA">The DA object can be used to retrieve data from input parameters and 
-        /// to store data in output parameters.</param>
+        /// <param name="DA">インプットパラメータからデータを取得し、出力用のデータを保持するオブジェクト</param>
         protected override void SolveInstance(IGH_DataAccess DA)
         {
+            // 引数の宣言＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝
             // input
-            // パラメータはひとまとめにするため、List にまとめる
             List<double> Param = new List<double>();
             List<double> M_out = new List<double>();
             double Lb = double.NaN;
@@ -412,28 +372,25 @@ namespace BeamAnalysis
             double Sig = double.NaN;
             double D = double.NaN;
             //
-            double L, Iy, Zy, i_t, lamda, Af, F, H, fb_calc, fb, fb1, fb2;
+            double L, Zy;
             double C = 1.0;
+            double fb = 0.0;
 
-            // Paramは List なので、GetDataList とする。
+            // 入力設定＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝
             if (!DA.GetDataList(0, Param)) { return; }
             if (!DA.GetData(1, ref M)) { return; }
             if (!DA.GetData(2, ref Lb)) { return; }
             if (!DA.GetData(3, ref E)) { return; }
 
-            H = Param[0];
-            L = Param[1];
-            F = Param[2];
-            Iy = Param[3];
+            // 必要な引数の割り当て＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝
+            L = Param[1];;
             Zy = Param[4];
-            fb_calc = Param[5];
-            i_t = Param[6];
-            lamda = Param[7];
-            Af = Param[8];
 
+            // 梁の計算箇所＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝
             Sig = M * 1000000 / Zy;
-            D = 0; 
+            D = 0;
 
+            // モーメントの出力＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝
             M_out.Add(M);
             M_out.Add(M);
             M_out.Add(M);
@@ -441,28 +398,11 @@ namespace BeamAnalysis
             M_out.Add(M);
             M_out.Add(L);
 
-            // 許容曲げの計算
-            if (fb_calc == 0) // H強軸回りの場合
-            {
-                fb1 = (1.0 - 0.4 * (Lb / i_t) * (Lb / i_t) / (C * lamda * lamda)) * F / 1.5;
-                fb2 = 89000.0 / (Lb * H / Af);
-                fb = Math.Min(Math.Max(fb1, fb2), F / 1.5);
-            }
-            else if (fb_calc == 1) // 箱型丸型の場合
-            {
-                fb = F / 1.5;
-            }
-            else if (fb_calc == 2) // L型等非対称断面の場合
-            {
-                fb2 = 89000.0 / (Lb * H / Af);
-                fb = Math.Min(fb2, F / 1.5);
-            }
-            else // エラー用　sig/fb が inf になるように 0指定
-            {
-                fb = 0.0;
-            }
+            // 許容曲げの計算 ＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝
+            Solver.Calc_fb_solver slv = new Solver.Calc_fb_solver();
+            slv.Calc_fb( Param, Lb, C, ref fb);
 
-            // 出力設定
+            // 出力設定＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝
             DA.SetDataList(0, M_out);
             DA.SetData(1, Sig);
             DA.SetData(2, fb);
@@ -471,8 +411,7 @@ namespace BeamAnalysis
         }
 
         /// <summary>
-        /// Provides an Icon for every component that will be visible in the User Interface.
-        /// Icons need to be 24x24 pixels.
+        /// アイコンの設定。24x24 pixelsが推奨
         /// </summary>
         protected override System.Drawing.Bitmap Icon
         {
@@ -869,7 +808,7 @@ namespace ResultView
         protected override void RegisterInputParams(GH_InputParamManager pManager)
         {
             pManager.AddNumberParameter("Moment", "M", "Input Moment", GH_ParamAccess.list);
-            pManager.AddNumberParameter("Scale", "Sc", "Input Output Scale", GH_ParamAccess.item, 1);
+            pManager.AddNumberParameter("Scale", "Sc", "Input Output Scale", GH_ParamAccess.item, 100);
         }
 
         protected override void RegisterOutputParams(GH_OutputParamManager pManager)
@@ -943,6 +882,52 @@ namespace ResultView
         public override Guid ComponentGuid
         {
             get { return new Guid("419c3a3a-cc48-4717-8cef-5f5647a5dcAa"); }
+        }
+    }
+}
+
+/// <summary>
+/// 解析関連
+/// </summary>
+namespace Solver
+{
+    /// <summary>
+    /// 許容曲げを計算するクラス
+    /// </summary>
+    public class Calc_fb_solver
+    {
+        public void Calc_fb(List<double> Param, double Lb,  double C, ref double fb)
+        {
+            // 解析関連パラメータ ＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝
+            double H, L, F, fb_calc, i_t, lamda, Af, fb1, fb2;
+            H = Param[0];
+            L = Param[1];
+            F = Param[2];
+            fb_calc = Param[5];
+            i_t = Param[6];
+            lamda = Param[7];
+            Af = Param[8];
+
+            // 計算箇所 ＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝
+            if (fb_calc == 0) // H強軸回りの場合
+            {
+                fb1 = (1.0 - 0.4 * (Lb / i_t) * (Lb / i_t) / (C * lamda * lamda)) * F / 1.5;
+                fb2 = 89000.0 / (Lb * H / Af);
+                fb = Math.Min(Math.Max(fb1, fb2), F / 1.5);
+            }
+            else if (fb_calc == 1) // 箱型丸型の場合
+            {
+                fb = F / 1.5;
+            }
+            else if (fb_calc == 2) // L型等非対称断面の場合
+            {
+                fb2 = 89000.0 / (Lb * H / Af);
+                fb = Math.Min(fb2, F / 1.5);
+            }
+            else // エラー用　sig/fb が inf になるように 0指定
+            {
+                fb = 0.0;
+            }
         }
     }
 }

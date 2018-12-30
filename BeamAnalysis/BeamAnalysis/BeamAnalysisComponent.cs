@@ -20,7 +20,10 @@ using Grasshopper.GUI.Gradient;
 
 using GH_IO.Serialization;
 
+using Rhino;
 using Rhino.Geometry;
+using Rhino.DocObjects;
+
 
 namespace BeamAnalysis
 {
@@ -430,9 +433,6 @@ namespace BeamAnalysis
             get { return new Guid("621eac11-23fb-445c-9430-44ce37bf9031"); }
         }
     }
-
-
-
 
     public class Beam_AnyM_Analysis : GH_Component
     {
@@ -911,8 +911,12 @@ namespace ModelDisp
 /// </summary>
 namespace ResultView
 {
-        public class MomentViewer : GH_Component
+    public class MomentViewer : GH_Component
     {
+        private List<double> M = new List<double>(10);
+        private double M1, M2, M3, M4, M5, L;
+        private Point3d M_point1, M_point2, M_point3, M_point4, M_point5;
+
         public MomentViewer()
             : base("Moment View",
                    "Moment",
@@ -936,8 +940,6 @@ namespace ResultView
         protected override void SolveInstance(IGH_DataAccess DA)
         {
             // 引数設定
-            List<double> M = new List<double>();
-            double M1, M2, M3, M4, M5, L;
             double Sc = double.NaN;
 
             // 入力設定
@@ -956,27 +958,32 @@ namespace ResultView
             var M12_P2 = new Point3d(0, 0, Sc * -M1);
             var M12_P3 = new Point3d(0, L / 4, Sc * -M2);
             var M12_P4 = new Point3d(0, L / 4, 0);
+            M_point1 = new Point3d(0, 0, Sc * -M1);
             //
             var M23_P1 = new Point3d(0, L / 4, 0);
             var M23_P2 = new Point3d(0, L / 4, Sc * -M2);
             var M23_P3 = new Point3d(0, L / 2, Sc * -M3);
             var M23_P4 = new Point3d(0, L / 2, 0);
+            M_point2 = new Point3d(0, L / 4, Sc * -M2);
             //
             var M34_P1 = new Point3d(0, L / 2, 0);
             var M34_P2 = new Point3d(0, L / 2, Sc * -M3);
             var M34_P3 = new Point3d(0, 3 * L / 4, Sc * -M4);
             var M34_P4 = new Point3d(0, 3 * L / 4, 0);
+            M_point3 = new Point3d(0, L / 2, Sc * -M3);
             //
             var M45_P1 = new Point3d(0, 3 * L / 4, 0);
             var M45_P2 = new Point3d(0, 3 * L / 4, Sc * -M4);
             var M45_P3 = new Point3d(0, L, Sc * -M5);
             var M45_P4 = new Point3d(0, L, 0);
+            M_point4 = new Point3d(0, 3 * L / 4, Sc * -M4);
+            M_point5 = new Point3d(0, L, Sc * -M5);
 
             Brep M12_brep = Brep.CreateFromCornerPoints(M12_P1, M12_P2, M12_P3, M12_P4, GH_Component.DocumentTolerance());
             Brep M23_brep = Brep.CreateFromCornerPoints(M23_P1, M23_P2, M23_P3, M23_P4, GH_Component.DocumentTolerance());
             Brep M34_brep = Brep.CreateFromCornerPoints(M34_P1, M34_P2, M34_P3, M34_P4, GH_Component.DocumentTolerance());
             Brep M45_brep = Brep.CreateFromCornerPoints(M45_P1, M45_P2, M45_P3, M45_P4, GH_Component.DocumentTolerance());
-
+            
             // モデルはRhino上に出力するだけなので、とりあえず配列でまとめる
             var brep = new Brep[4];
             brep[0] = M12_brep;
@@ -986,6 +993,19 @@ namespace ResultView
 
             // まとめての出力なので、SetDataList で出力
             DA.SetDataList(0, brep);
+        }
+
+        /// <summary>
+        /// Rhino の viewport への出力
+        /// </summary>
+        public override void DrawViewportWires(IGH_PreviewArgs args)
+        {
+            Color colour = Color.FromName("Black");
+            args.Display.Draw2dText(M1.ToString(), colour, M_point1, true, 22);
+            args.Display.Draw2dText(M2.ToString(), colour, M_point2, true, 22);
+            args.Display.Draw2dText(M3.ToString(), colour, M_point3, true, 22);
+            args.Display.Draw2dText(M4.ToString(), colour, M_point4, true, 22);
+            args.Display.Draw2dText(M5.ToString(), colour, M_point5, true, 22);
         }
 
         protected override System.Drawing.Bitmap Icon
@@ -1150,3 +1170,48 @@ namespace UI_Setting
     }
 }
 
+/// <summary>
+/// 開発中、テスト中のものを入れる名前空間
+/// </summary>
+namespace WIP
+{
+    public class test_Component : GH_Component
+    {
+        private string m_T;
+        private Color colour;
+        private Point3d m_P;
+
+        public override Guid ComponentGuid
+        {
+            get
+            {
+                return new Guid("{3B220754-4114-4170-B6C3-B286B86ED511}");
+            }
+        }
+        public test_Component() : base("test", "test", "test text tags in a Rhino viewport", "rgkr", "wip")
+        {
+        }
+        protected override void RegisterInputParams(GH_Component.GH_InputParamManager pManager)
+        {
+            pManager.AddPointParameter("Location", "L", "Location of text tag", GH_ParamAccess.item);
+            pManager.AddTextParameter("Text", "T", "The text to display", GH_ParamAccess.item);
+            pManager.AddColourParameter("Colour", "C", "Optional colour for tag", GH_ParamAccess.item);
+        }
+        protected override void RegisterOutputParams(GH_Component.GH_OutputParamManager pManager)
+        {
+        }
+        protected override void SolveInstance(IGH_DataAccess DA)
+        {
+            if (!DA.GetData(0, ref m_P)) { return; }
+            if (!DA.GetData(1, ref m_T)) { return; }
+            if (!DA.GetData(2, ref colour)) { return; }
+        }
+        public override void DrawViewportWires(IGH_PreviewArgs args)
+        {
+            //  string m_T = "test";
+            //  Color colour = Color.FromName("SlateBlue");
+            //  Point3d m_P = new Point3d(0,0,0);
+            args.Display.Draw2dText(m_T, colour, m_P, true, 22);
+        }
+    }
+}

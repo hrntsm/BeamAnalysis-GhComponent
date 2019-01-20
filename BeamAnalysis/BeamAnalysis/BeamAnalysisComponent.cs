@@ -558,13 +558,12 @@ namespace ModelDisp
     /// </summary>
     public class H_Shape_Model : GH_Component
     {
+        private List<Brep> ModelBrep = new List<Brep>();
+        private Rhino.Display.DisplayMaterial ModelMaterial;
+        private Color ModelColour = Color.FromName("LightCoral");
+
         public H_Shape_Model()
-            : base("Make H Shape Model",
-                   "H Shape",
-                   "Display H Shape Model",
-                   "rgkr",
-                   "CrossSection"
-                  )
+            : base("Make H Shape Model", "H Shape", "Display H Shape Model", "rgkr", "CrossSection"                  )
         {
         }
         protected override void RegisterInputParams(GH_InputParamManager pManager)
@@ -576,7 +575,11 @@ namespace ModelDisp
             pManager.AddNumberParameter("F", "F", "F (N/mm2)", GH_ParamAccess.item, 235);
             pManager.AddNumberParameter("Length", "L", "Model Length (mm)", GH_ParamAccess.item, 6300.0);
         }
-
+        public override void ClearData()
+        {
+            base.ClearData();
+            ModelBrep.Clear();
+        }
         protected override void RegisterOutputParams(GH_OutputParamManager pManager)
         {
             pManager.AddNumberParameter("Analysis Parametar", "Param", "output Analysis Parameter", GH_ParamAccess.item);
@@ -653,10 +656,29 @@ namespace ModelDisp
             model[0] = upper_flange;
             model[1] = bottom_flange;
             model[2] = web;
+            ModelBrep.Add(upper_flange.ToBrep());
+            ModelBrep.Add(bottom_flange.ToBrep());
+            ModelBrep.Add(web.ToBrep());
 
             // まとめての出力なので、SetDataList で出力
             DA.SetDataList(1, model);
             DA.SetDataList(0, Params);
+        }
+
+        /// <summary>
+        /// Rhino の viewport への出力
+        /// </summary>
+        public override void DrawViewportWires(IGH_PreviewArgs args)
+        {
+            ModelMaterial = new Rhino.Display.DisplayMaterial(ModelColour);
+            for (int i = 0; i < 3; i++)
+                args.Display.DrawBrepShaded(ModelBrep[i], ModelMaterial);
+        }
+        public override void DrawViewportMeshes(IGH_PreviewArgs args)
+        {
+            ModelMaterial = new Rhino.Display.DisplayMaterial(ModelColour);
+            for (int i = 0; i < 3; i++)
+                args.Display.DrawBrepWires(ModelBrep[i], ModelMaterial.Diffuse, 0);
         }
 
         protected override System.Drawing.Bitmap Icon
@@ -913,8 +935,8 @@ namespace ResultView
 {
     public class MomentViewer : GH_Component
     {
-        private List<double> M = new List<double>(10);
-        private double M1, M2, M3, M4, M5, L;
+        private List<double> M = new List<double>();
+        private double M1 = 0, M2 = 0, M3 = 0, M4 = 0, M5 = 0, L = 0;
         private Point3d M_point1, M_point2, M_point3, M_point4, M_point5;
         private List<Brep> MomentBrep = new List<Brep> ();
         private Rhino.Display.DisplayMaterial MomentMaterial;
@@ -922,12 +944,7 @@ namespace ResultView
         private Color MomentColour = Color.FromName("SkyBlue");
 
         public MomentViewer()
-            : base("Moment View",
-                   "Moment",
-                   "Display Moment",
-                   "rgkr",
-                   "Result"
-                  )
+            : base("Moment View", "Moment", "Display Moment", "rgkr", "Result")
         {
         }
         protected override void RegisterInputParams(GH_InputParamManager pManager)
@@ -935,7 +952,12 @@ namespace ResultView
             pManager.AddNumberParameter("Moment", "M", "Input Moment", GH_ParamAccess.list);
             pManager.AddNumberParameter("Scale", "Sc", "Input Output Scale", GH_ParamAccess.item, 10);
         }
-
+        public override void ClearData()
+        {
+            base.ClearData();
+            M.Clear();
+            MomentBrep.Clear();
+        }
         protected override void RegisterOutputParams(GH_OutputParamManager pManager)
         {
             pManager.AddBrepParameter("View Moment Surface", "Srf", "output Moment Surface", GH_ParamAccess.item);
@@ -1003,15 +1025,18 @@ namespace ResultView
         /// </summary>
         public override void DrawViewportWires(IGH_PreviewArgs args)
         {
-            args.Display.Draw2dText(M1.ToString(), TextColour, M_point1, true, 22);
-            args.Display.Draw2dText(M2.ToString(), TextColour, M_point2, true, 22);
-            args.Display.Draw2dText(M3.ToString(), TextColour, M_point3, true, 22);
-            args.Display.Draw2dText(M4.ToString(), TextColour, M_point4, true, 22);
-            args.Display.Draw2dText(M5.ToString(), TextColour, M_point5, true, 22);
+            if (M_point5 != null)
+            {
+                args.Display.Draw2dText(M1.ToString("F1"), TextColour, M_point1, true, 22);
+                args.Display.Draw2dText(M2.ToString("F1"), TextColour, M_point2, true, 22);
+                args.Display.Draw2dText(M3.ToString("F1"), TextColour, M_point3, true, 22);
+                args.Display.Draw2dText(M4.ToString("F1"), TextColour, M_point4, true, 22);
+                args.Display.Draw2dText(M5.ToString("F1"), TextColour, M_point5, true, 22);
+            }
             // sureface 色付け
             MomentMaterial = new Rhino.Display.DisplayMaterial(MomentColour);
 
-            for (int i = 0; i < 5; i++) 
+            for (int i = 0; i < 4; i++) 
                 args.Display.DrawBrepShaded(MomentBrep[i], MomentMaterial);
         }
         public override void DrawViewportMeshes(IGH_PreviewArgs args)

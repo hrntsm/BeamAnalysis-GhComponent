@@ -916,6 +916,10 @@ namespace ResultView
         private List<double> M = new List<double>(10);
         private double M1, M2, M3, M4, M5, L;
         private Point3d M_point1, M_point2, M_point3, M_point4, M_point5;
+        private List<Brep> MomentBrep = new List<Brep> ();
+        private Rhino.Display.DisplayMaterial MomentMaterial;
+        private Color TextColour = Color.FromName("Black");
+        private Color MomentColour = Color.FromName("SkyBlue");
 
         public MomentViewer()
             : base("Moment View",
@@ -929,7 +933,7 @@ namespace ResultView
         protected override void RegisterInputParams(GH_InputParamManager pManager)
         {
             pManager.AddNumberParameter("Moment", "M", "Input Moment", GH_ParamAccess.list);
-            pManager.AddNumberParameter("Scale", "Sc", "Input Output Scale", GH_ParamAccess.item, 100);
+            pManager.AddNumberParameter("Scale", "Sc", "Input Output Scale", GH_ParamAccess.item, 10);
         }
 
         protected override void RegisterOutputParams(GH_OutputParamManager pManager)
@@ -983,16 +987,15 @@ namespace ResultView
             Brep M23_brep = Brep.CreateFromCornerPoints(M23_P1, M23_P2, M23_P3, M23_P4, GH_Component.DocumentTolerance());
             Brep M34_brep = Brep.CreateFromCornerPoints(M34_P1, M34_P2, M34_P3, M34_P4, GH_Component.DocumentTolerance());
             Brep M45_brep = Brep.CreateFromCornerPoints(M45_P1, M45_P2, M45_P3, M45_P4, GH_Component.DocumentTolerance());
-            
+
             // モデルはRhino上に出力するだけなので、とりあえず配列でまとめる
-            var brep = new Brep[4];
-            brep[0] = M12_brep;
-            brep[1] = M23_brep;
-            brep[2] = M34_brep;
-            brep[3] = M45_brep;
+            MomentBrep.Add(M12_brep);
+            MomentBrep.Add(M23_brep);
+            MomentBrep.Add(M34_brep);
+            MomentBrep.Add(M45_brep);
 
             // まとめての出力なので、SetDataList で出力
-            DA.SetDataList(0, brep);
+            DA.SetDataList(0, MomentBrep);
         }
 
         /// <summary>
@@ -1000,12 +1003,23 @@ namespace ResultView
         /// </summary>
         public override void DrawViewportWires(IGH_PreviewArgs args)
         {
-            Color colour = Color.FromName("Black");
-            args.Display.Draw2dText(M1.ToString(), colour, M_point1, true, 22);
-            args.Display.Draw2dText(M2.ToString(), colour, M_point2, true, 22);
-            args.Display.Draw2dText(M3.ToString(), colour, M_point3, true, 22);
-            args.Display.Draw2dText(M4.ToString(), colour, M_point4, true, 22);
-            args.Display.Draw2dText(M5.ToString(), colour, M_point5, true, 22);
+            args.Display.Draw2dText(M1.ToString(), TextColour, M_point1, true, 22);
+            args.Display.Draw2dText(M2.ToString(), TextColour, M_point2, true, 22);
+            args.Display.Draw2dText(M3.ToString(), TextColour, M_point3, true, 22);
+            args.Display.Draw2dText(M4.ToString(), TextColour, M_point4, true, 22);
+            args.Display.Draw2dText(M5.ToString(), TextColour, M_point5, true, 22);
+            // sureface 色付け
+            MomentMaterial = new Rhino.Display.DisplayMaterial(MomentColour);
+
+            for (int i = 0; i < 5; i++) 
+                args.Display.DrawBrepShaded(MomentBrep[i], MomentMaterial);
+        }
+        public override void DrawViewportMeshes(IGH_PreviewArgs args)
+        {
+            MomentMaterial = new Rhino.Display.DisplayMaterial(MomentColour);
+
+            for (int i = 0; i < 4; i++)
+                args.Display.DrawBrepWires(MomentBrep[i], MomentMaterial.Diffuse, 0);
         }
 
         protected override System.Drawing.Bitmap Icon
@@ -1212,6 +1226,46 @@ namespace WIP
             //  Color colour = Color.FromName("SlateBlue");
             //  Point3d m_P = new Point3d(0,0,0);
             args.Display.Draw2dText(m_T, colour, m_P, true, 22);
+        }
+    }
+
+    public class test_ColourComponent : GH_Component
+    {
+        private Brep m_T;
+        private Color colour;
+        private Rhino.Display.DisplayMaterial material;
+
+        public override Guid ComponentGuid
+        {
+            get
+            {
+                return new Guid("{3B220754-4114-4170-B6C3-B286B86ED501}");
+            }
+        }
+        public test_ColourComponent() : base("test", "test", "test text tags in a Rhino viewport", "rgkr", "wip")
+        {
+        }
+        protected override void RegisterInputParams(GH_Component.GH_InputParamManager pManager)
+        {
+            pManager.AddBrepParameter("Location", "B", "Location of text tag", GH_ParamAccess.item);
+            pManager.AddColourParameter("Colour", "C", "Optional colour for tag", GH_ParamAccess.item);
+        }
+        protected override void RegisterOutputParams(GH_Component.GH_OutputParamManager pManager)
+        {
+        }
+        protected override void SolveInstance(IGH_DataAccess DA)
+        {
+            if (!DA.GetData(0, ref m_T)) { return; }
+            if (!DA.GetData(1, ref colour)) { return; }
+            material = new Rhino.Display.DisplayMaterial(colour);
+        }
+        public override void DrawViewportMeshes(IGH_PreviewArgs args)
+        {
+             args.Display.DrawBrepWires(m_T, material.Diffuse, 0);
+        }
+        public override void DrawViewportWires(IGH_PreviewArgs args)
+        {
+             args.Display.DrawBrepShaded(m_T, material);
         }
     }
 }

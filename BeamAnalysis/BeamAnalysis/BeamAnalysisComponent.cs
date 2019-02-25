@@ -25,10 +25,8 @@ using Rhino.Geometry;
 using Rhino.DocObjects;
 
 
-namespace BeamAnalysis
-{
-    public class Beam_CL_Analysis : GH_Component
-    {
+namespace BeamAnalysis {
+    public class Beam_CL_Analysis : GH_Component {
         /// <summary>
         /// 中央集中荷重の梁の計算
         /// </summary>
@@ -38,47 +36,43 @@ namespace BeamAnalysis
                  "Stress Analysis of the Beam",      // コンポーネントの説明
                  "rgkr",                             // カテゴリ(タブの表示名)
                  "Beam Analysis"                     // サブカテゴリ(タブ内の表示名)
-                )
-        {
+                ) {
         }
-        
+        public override void ClearData() {
+            base.ClearData();
+        }
         /// <summary>
         /// UIのカスタム 作り切れてないのでコメントアウト
         /// </summary>
-//      public override void CreateAttributes()
-//      {
-//          m_attributes = new UI_Setting.Attributes_Custom(this);
-//      }
+        //      public override void CreateAttributes()
+        //      {
+        //          m_attributes = new UI_Setting.Attributes_Custom(this);
+        //      }
 
         /// <summary>
         /// インプットパラメータの登録
         /// </summary>
-        protected override void RegisterInputParams(GH_Component.GH_InputParamManager pManager)
-        {
+        protected override void RegisterInputParams(GH_Component.GH_InputParamManager pManager) {
             pManager.AddNumberParameter("Analysis Parametar", "Param", "Input Analysis Parameter", GH_ParamAccess.list);
             pManager.AddNumberParameter("Load", "Load", "Centralized Load (kN)", GH_ParamAccess.item,100);
             pManager.AddNumberParameter("Lb", "Lb", "Buckling Length (mm)", GH_ParamAccess.item, 0.0);
             pManager.AddNumberParameter("Young's modulus", "E", "Young's Modulus (N/mm^2)", GH_ParamAccess.item, 205000);
         }
-
         /// <summary>
         /// アウトプットパラメータの登録
         /// </summary>
-        protected override void RegisterOutputParams(GH_Component.GH_OutputParamManager pManager)
-        {
+        protected override void RegisterOutputParams(GH_Component.GH_OutputParamManager pManager) {
             pManager.AddNumberParameter("Bending Moment", "M", "Output Max Bending Moment(kNm)", GH_ParamAccess.item);
             pManager.AddNumberParameter("Bending Stress", "Sig", "Output Max Bending Stress(N/mm^2)", GH_ParamAccess.item);
             pManager.AddNumberParameter("Allowable Bending Stress", "fb", "Output Allowable Bending Stress(N/mm^2)", GH_ParamAccess.item);
             pManager.AddNumberParameter("examination result", "Sig/fb", "Output Max Examination Result", GH_ParamAccess.item);
             pManager.AddNumberParameter("Deformation", "D", "Output Max Deformation(mm)", GH_ParamAccess.item);
         }
-
         /// <summary>
         /// 計算部分
         /// </summary>
         /// <param name="DA">インプットパラメータからデータを取得し、出力用のデータを保持するオブジェクト</param>
-        protected override void SolveInstance(IGH_DataAccess DA)
-        {
+        protected override void SolveInstance(IGH_DataAccess DA) {
             // 引数の宣言＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝
             // input
             List<double> Param = new List<double>();
@@ -130,26 +124,22 @@ namespace BeamAnalysis
             DA.SetData(3, Sig/fb);
             DA.SetData(4, D);
         }
-
         /// <summary>
         /// アイコンの設定。24x24 pixelsが推奨
         /// </summary>
-        protected override System.Drawing.Bitmap Icon
-        {
-            get
-            {
+        protected override System.Drawing.Bitmap Icon {
+            get {
                 return BeamAnalysis.Properties.Resource.CL_icon;
             }
         }
-
         /// <summary>
         /// GUIDの設定
         /// </summary>
-        public override Guid ComponentGuid
-        {
-            get { return new Guid("621eac03-23fb-445c-9430-44ce37bf9020"); }
+        public override Guid ComponentGuid {
+            get {
+                return new Guid("621eac03-23fb-445c-9430-44ce37bf9020");
+            }
         }
-
         /// <summary>
         /// コンポーネントを右クリック時に出るコンテキストメニューの編集
         /// 未完なのでコメントアウト
@@ -197,8 +187,7 @@ namespace BeamAnalysis
 
     }
 
-    public class Beam_TL_Analysis : GH_Component
-    {
+    public class Beam_TL_Analysis : GH_Component {
         /// <summary>
         /// 台形分布荷重の梁の計算
         /// </summary>
@@ -208,40 +197,36 @@ namespace BeamAnalysis
                 "Stress Analysis of the Beam",      // コンポーネントの説明
                 "rgkr",                             // カテゴリ(タブの表示名)
                 "Beam Analysis"                     // サブカテゴリ(タブ内の表示名)
-            　)
-        {
+            　) {
         }
-
+        public override void ClearData() {
+            base.ClearData();
+        }
         /// <summary>
         /// インプットパラメータの登録
         /// </summary>
-        protected override void RegisterInputParams(GH_Component.GH_InputParamManager pManager)
-        {
+        protected override void RegisterInputParams(GH_Component.GH_InputParamManager pManager) {
             pManager.AddNumberParameter("Analysis Parametar", "Param", "Input Analysis Parameter", GH_ParamAccess.list);
             pManager.AddNumberParameter("Trapezoid Load", "W", "Trapezoid Load (kN/m^2)", GH_ParamAccess.item, 10);
             pManager.AddNumberParameter("D Width", "DW", "Domination Width (mm)", GH_ParamAccess.item, 1800);
             pManager.AddNumberParameter("Lb", "Lb", "Buckling Length (mm)", GH_ParamAccess.item, 0.0);
             pManager.AddNumberParameter("Young's Modulus", "E", "Young's Modulus (N/mm^2)", GH_ParamAccess.item, 205000);
         }
-
         /// <summary>
         /// アウトプットパラメータの登録
         /// </summary>
-        protected override void RegisterOutputParams(GH_Component.GH_OutputParamManager pManager)
-        {
+        protected override void RegisterOutputParams(GH_Component.GH_OutputParamManager pManager) {
             pManager.AddNumberParameter("Bending Moment", "M", "Output Max Bending Moment (kNm)", GH_ParamAccess.item);
             pManager.AddNumberParameter("Bending Stress", "Sig", "Output Max Bending Stress (N/mm^2)", GH_ParamAccess.item);
             pManager.AddNumberParameter("Allowable Bending Stress", "fb", "Output Allowable Bending Stress (N/mm^2)", GH_ParamAccess.item);
             pManager.AddNumberParameter("Examination Result", "Sig/fb", "Output Max Examination Result", GH_ParamAccess.item);
             pManager.AddNumberParameter("Deformation", "D", "Output Max Deformation(mm)", GH_ParamAccess.item);
         }
-
         /// <summary>
         /// 計算部分
         /// </summary>
         /// <param name="DA">インプットパラメータからデータを取得し、出力用のデータを保持するオブジェクト</param>
-        protected override void SolveInstance(IGH_DataAccess DA)
-        {
+        protected override void SolveInstance(IGH_DataAccess DA) {
             // 引数の宣言＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝
             // input
             List<double> Param = new List<double>();
@@ -297,31 +282,26 @@ namespace BeamAnalysis
             DA.SetData(3, Sig / fb);
             DA.SetData(4, D);
         }
-
         /// <summary>
         /// アイコンの設定。24x24 pixelsが推奨
         /// </summary>
-        protected override System.Drawing.Bitmap Icon
-        {
-            get
-            {
+        protected override System.Drawing.Bitmap Icon {
+            get {
                 return BeamAnalysis.Properties.Resource.UL_icon;
             }
         }
-
         /// <summary>
         /// GUIDの設定
         /// </summary>
-        public override Guid ComponentGuid
-        {
-            get { return new Guid("621eac11-23fb-445c-9430-44ce37bf9020"); }
+        public override Guid ComponentGuid {
+            get {
+                return new Guid("621eac11-23fb-445c-9430-44ce37bf9020");
+            }
         }
     }
-
-    public class Beam_Canti_Analysis : GH_Component
-    {
+    public class Beam_Canti_Analysis : GH_Component {
         /// <summary>
-        /// 台形分布荷重の梁の計算
+        /// 先端集中荷重の片持ち梁の計算
         /// </summary>
         public Beam_Canti_Analysis()
          : base("Cantilever Point Load",            // 名称
@@ -329,39 +309,35 @@ namespace BeamAnalysis
                 "Stress Analysis of the Beam",      // コンポーネントの説明
                 "rgkr",                             // カテゴリ(タブの表示名)
                 "Beam Analysis"                     // サブカテゴリ(タブ内の表示名)
-            　)
-        {
+            　) {
         }
-
+        public override void ClearData() {
+            base.ClearData();
+        }
         /// <summary>
         /// インプットパラメータの登録
         /// </summary>
-        protected override void RegisterInputParams(GH_Component.GH_InputParamManager pManager)
-        {
+        protected override void RegisterInputParams(GH_Component.GH_InputParamManager pManager) {
             pManager.AddNumberParameter("Analysis Parametar", "Param", "Input Analysis Parameter", GH_ParamAccess.list);
             pManager.AddNumberParameter("Point Load", "P", "Point Load (kN)", GH_ParamAccess.item, 10);
             pManager.AddNumberParameter("Lb", "Lb", "Buckling Length (mm)", GH_ParamAccess.item, 0.0);
             pManager.AddNumberParameter("Young's Modulus", "E", "Young's Modulus (N/mm^2)", GH_ParamAccess.item, 205000);
         }
-
         /// <summary>
         /// アウトプットパラメータの登録
         /// </summary>
-        protected override void RegisterOutputParams(GH_Component.GH_OutputParamManager pManager)
-        {
+        protected override void RegisterOutputParams(GH_Component.GH_OutputParamManager pManager) {
             pManager.AddNumberParameter("Bending Moment", "M", "Output Max Bending Moment (kNm)", GH_ParamAccess.item);
             pManager.AddNumberParameter("Bending Stress", "Sig", "Output Max Bending Stress (N/mm^2)", GH_ParamAccess.item);
             pManager.AddNumberParameter("Allowable Bending Stress", "fb", "Output Allowable Bending Stress (N/mm^2)", GH_ParamAccess.item);
             pManager.AddNumberParameter("Examination Result", "Sig/fb", "Output Max Examination Result", GH_ParamAccess.item);
             pManager.AddNumberParameter("Deformation", "D", "Output Max Deformation(mm)", GH_ParamAccess.item);
         }
-
         /// <summary>
         /// 計算部分
         /// </summary>
         /// <param name="DA">インプットパラメータからデータを取得し、出力用のデータを保持するオブジェクト</param>
-        protected override void SolveInstance(IGH_DataAccess DA)
-        {
+        protected override void SolveInstance(IGH_DataAccess DA) {
             // 引数の宣言＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝
             // input
             List<double> Param = new List<double>();
@@ -413,31 +389,26 @@ namespace BeamAnalysis
             DA.SetData(3, Sig / fb);
             DA.SetData(4, D);
         }
-
         /// <summary>
         /// アイコンの設定。24x24 pixelsが推奨
         /// </summary>
-        protected override System.Drawing.Bitmap Icon
-        {
-            get
-            {
+        protected override System.Drawing.Bitmap Icon {
+            get {
                 return BeamAnalysis.Properties.Resource.CantiPL_icon;
             }
         }
-
         /// <summary>
         /// GUIDの設定
         /// </summary>
-        public override Guid ComponentGuid
-        {
-            get { return new Guid("621eac11-23fb-445c-9430-44ce37bf9031"); }
+        public override Guid ComponentGuid {
+            get {
+                return new Guid("621eac11-23fb-445c-9430-44ce37bf9031");
+            }
         }
     }
-
-    public class Beam_AnyM_Analysis : GH_Component
-    {
+    public class Beam_AnyM_Analysis : GH_Component {
         /// <summary>
-        /// 名称の設定
+        /// 任意荷重のかかった梁の計算
         /// </summary>
         public Beam_AnyM_Analysis()
       : base("Any Moment",     　　　　　        // 名称
@@ -445,39 +416,35 @@ namespace BeamAnalysis
              "Stress Analysis of the Beam",      // コンポーネントの説明
              "rgkr",                             // カテゴリ(タブの表示名)
              "Beam Analysis"                     // サブカテゴリ(タブ内の表示名)
-            )
-        {
+            ) {
         }
-
+        public override void ClearData() {
+            base.ClearData();
+        }
         /// <summary>
         /// インプットパラメータの登録
         /// </summary>
-        protected override void RegisterInputParams(GH_Component.GH_InputParamManager pManager)
-        {
+        protected override void RegisterInputParams(GH_Component.GH_InputParamManager pManager) {
             pManager.AddNumberParameter("Analysis Parametar", "Param", "Input Analysis Parameter", GH_ParamAccess.list);
             pManager.AddNumberParameter("Any Moment", "AnyM", "Any Moment (kNm)", GH_ParamAccess.item, 1000);
             pManager.AddNumberParameter("Lb", "Lb", "Buckling Length (mm)", GH_ParamAccess.item, 0.0);
             pManager.AddNumberParameter("Young's Modulus", "E", "Young's Modulus (N/mm^2)", GH_ParamAccess.item, 205000);
         }
-
         /// <summary>
         /// アウトプットパラメータの登録
         /// </summary>
-        protected override void RegisterOutputParams(GH_Component.GH_OutputParamManager pManager)
-        {
+        protected override void RegisterOutputParams(GH_Component.GH_OutputParamManager pManager) {
             pManager.AddNumberParameter("Bending Moment", "M", "Output Max Bending Moment(kNm)", GH_ParamAccess.item);
             pManager.AddNumberParameter("Bending Stress", "Sig", "Output Max Bending Stress(N/mm^2)", GH_ParamAccess.item);
             pManager.AddNumberParameter("Allowable Bending stress", "fb", "Output Allowable Bending Stress(N/mm^2)", GH_ParamAccess.item);
             pManager.AddNumberParameter("Examination Result", "Sig/fb", "Output Max Examination Result", GH_ParamAccess.item);
             pManager.AddNumberParameter("Deformation", "D", "Output Max Deformation(mm)", GH_ParamAccess.item);
         }
-
         /// <summary>
         /// 計算部分
         /// </summary>
         /// <param name="DA">インプットパラメータからデータを取得し、出力用のデータを保持するオブジェクト</param>
-        protected override void SolveInstance(IGH_DataAccess DA)
-        {
+        protected override void SolveInstance(IGH_DataAccess DA) {
             // 引数の宣言＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝
             // input
             List<double> Param = new List<double>();
@@ -526,48 +493,47 @@ namespace BeamAnalysis
             DA.SetData(3, Sig / fb);
             DA.SetData(4, D);
         }
-
         /// <summary>
         /// アイコンの設定。24x24 pixelsが推奨
         /// </summary>
-        protected override System.Drawing.Bitmap Icon
-        {
-            get
-            {
+        protected override System.Drawing.Bitmap Icon {
+            get {
                 return BeamAnalysis.Properties.Resource.AnyM_icon;
             }
         }
-
         /// <summary>
         /// GUIDの設定
         /// </summary>
-        public override Guid ComponentGuid
-        {
-            get { return new Guid("621eac11-23fb-445c-9430-44ce37ba9020"); }
+        public override Guid ComponentGuid {
+            get {
+                return new Guid("621eac11-23fb-445c-9430-44ce37ba9020");
+            }
         }
     }
 }
-
 /// <summary>
 /// rhino上への出力と断面諸元の計算
 /// </summary>
-namespace ModelDisp
-{
+namespace ModelDisp {
     /// <summary>
     /// H型断面の計算、出力
     /// </summary>
-    public class H_Shape_Model : GH_Component
-    {
+    public class H_Shape_Model : GH_Component {
         private List<Brep> ModelBrep = new List<Brep>();
         private Rhino.Display.DisplayMaterial ModelMaterial;
         private Color ModelColour = Color.FromName("LightCoral");
 
         public H_Shape_Model()
-            : base("Make H Shape Model", "H Shape", "Display H Shape Model", "rgkr", "CrossSection"                  )
-        {
+            : base("Make H Shape Model", "H Shape", "Display H Shape Model", "rgkr", "CrossSection") {
         }
-        protected override void RegisterInputParams(GH_InputParamManager pManager)
-        {
+        public override void ClearData() {
+            base.ClearData();
+            ModelBrep.Clear();
+        }
+        protected override void BeforeSolveInstance() {
+            ModelBrep = new List<Brep>();
+        }
+        protected override void RegisterInputParams(GH_InputParamManager pManager) {
             pManager.AddNumberParameter("Width", "B", "Model Width (mm)", GH_ParamAccess.item, 200.0);
             pManager.AddNumberParameter("Height", "H", "Model High (mm)", GH_ParamAccess.item, 400.0);
             pManager.AddNumberParameter("Web Thickness", "tw", "Web Thickness (mm)", GH_ParamAccess.item, 8.0);
@@ -575,19 +541,11 @@ namespace ModelDisp
             pManager.AddNumberParameter("F", "F", "F (N/mm2)", GH_ParamAccess.item, 235);
             pManager.AddNumberParameter("Length", "L", "Model Length (mm)", GH_ParamAccess.item, 6300.0);
         }
-        public override void ClearData()
-        {
-            base.ClearData();
-            ModelBrep.Clear();
-        }
-        protected override void RegisterOutputParams(GH_OutputParamManager pManager)
-        {
+        protected override void RegisterOutputParams(GH_OutputParamManager pManager) {
             pManager.AddNumberParameter("Analysis Parametar", "Param", "output Analysis Parameter", GH_ParamAccess.item);
             pManager.AddSurfaceParameter("View Model Surface", "Srf", "output Model Surface", GH_ParamAccess.item);
         }
-
-        protected override void SolveInstance(IGH_DataAccess DA)
-        {
+        protected override void SolveInstance(IGH_DataAccess DA) {
             // 引数設定
             double B = double.NaN;
             double H = double.NaN;
@@ -664,53 +622,52 @@ namespace ModelDisp
             DA.SetDataList(1, model);
             DA.SetDataList(0, Params);
         }
-
         /// <summary>
         /// Rhino の viewport への出力
         /// </summary>
-        public override void DrawViewportWires(IGH_PreviewArgs args)
-        {
+        public override void DrawViewportWires(IGH_PreviewArgs args) {
             ModelMaterial = new Rhino.Display.DisplayMaterial(ModelColour);
-            for (int i = 0; i < 3; i++)
-                args.Display.DrawBrepShaded(ModelBrep[i], ModelMaterial);
+            if (ModelBrep != null) {
+                for (int i = 0; i < 3; i++) {
+                    args.Display.DrawBrepShaded(ModelBrep[i], ModelMaterial);
+                }
+            }
         }
-        public override void DrawViewportMeshes(IGH_PreviewArgs args)
-        {
+        public override void DrawViewportMeshes(IGH_PreviewArgs args) {
             ModelMaterial = new Rhino.Display.DisplayMaterial(ModelColour);
-            for (int i = 0; i < 3; i++)
-                args.Display.DrawBrepWires(ModelBrep[i], ModelMaterial.Diffuse, 0);
+            if (ModelBrep != null) {
+                for (int i = 0; i < 3; i++) {
+                    args.Display.DrawBrepWires(ModelBrep[i], ModelMaterial.Diffuse, 0);
+                }
+            }
         }
-
-        protected override System.Drawing.Bitmap Icon
-        {
-            get
-            {
+        protected override System.Drawing.Bitmap Icon {
+            get {
                 return BeamAnalysis.Properties.Resource.H_icon;
             }
         }
-
-        public override Guid ComponentGuid
-        {
-            get { return new Guid("419c3a3a-cc48-4717-8cef-5f5647a5ecAa"); }
+        public override Guid ComponentGuid {
+            get {
+                return new Guid("419c3a3a-cc48-4717-8cef-5f5647a5ecAa");
+            }
         }
     }
-
     /// <summary>
     /// L型断面の計算、出力
     /// </summary>
-    public class L_Shape_Model : GH_Component
-    {
+    public class L_Shape_Model : GH_Component {
         public L_Shape_Model()
             : base("Make L Shape Model",
                    "L Shape",
                    "Display L Shape Model",
                    "rgkr",
                    "CrossSection"
-                  )
-        {
+                  ) {
         }
-        protected override void RegisterInputParams(GH_InputParamManager pManager)
-        {
+        public override void ClearData() {
+            base.ClearData();
+        }
+        protected override void RegisterInputParams(GH_InputParamManager pManager) {
             pManager.AddNumberParameter("Width", "B", "Model Width (mm)", GH_ParamAccess.item, 75.0);
             pManager.AddNumberParameter("Height", "H", "Model High (mm)", GH_ParamAccess.item, 75.0);
             pManager.AddNumberParameter("Web Thickness", "tw", "Web Thickness (mm)", GH_ParamAccess.item, 9.0);
@@ -718,15 +675,11 @@ namespace ModelDisp
             pManager.AddNumberParameter("F", "F", "F (N/mm2)", GH_ParamAccess.item, 235);
             pManager.AddNumberParameter("Length", "L", "Model Length (mm)", GH_ParamAccess.item, 3000.0);
         }
-
-        protected override void RegisterOutputParams(GH_OutputParamManager pManager)
-        {
+        protected override void RegisterOutputParams(GH_OutputParamManager pManager) {
             pManager.AddNumberParameter("Analysis Parametar", "Param", "output Analysis Parameter", GH_ParamAccess.item);
             pManager.AddSurfaceParameter("View Model Surface", "Srf", "output Model Surface", GH_ParamAccess.item);
         }
-
-        protected override void SolveInstance(IGH_DataAccess DA)
-        {
+        protected override void SolveInstance(IGH_DataAccess DA) {
             // 引数設定
             double B = double.NaN;
             double H = double.NaN;
@@ -792,52 +745,44 @@ namespace ModelDisp
             DA.SetDataList(1, model);
             DA.SetDataList(0, Params);
         }
-
-        protected override System.Drawing.Bitmap Icon
-        {
-            get
-            {
+        protected override System.Drawing.Bitmap Icon {
+            get {
                 return BeamAnalysis.Properties.Resource.L_icon;
             }
         }
-
-        public override Guid ComponentGuid
-        {
-            get { return new Guid("419c3a44-cc48-4717-8cef-5f5647a5ecAa"); }
+        public override Guid ComponentGuid {
+            get {
+                return new Guid("419c3a44-cc48-4717-8cef-5f5647a5ecAa");
+            }
         }
     }
-
     /// <summary>
     /// 箱型断面の計算、出力
     /// </summary>
-    public class BOX_Shape_Model : GH_Component
-    {
+    public class BOX_Shape_Model : GH_Component {
         public BOX_Shape_Model()
             : base("Make BOX Shape Model",
                    "BOX Shape",
                    "Display BOX Shape Model",
                    "rgkr",
                    "CrossSection"
-                  )
-        {
+                  ) {
         }
-        protected override void RegisterInputParams(GH_InputParamManager pManager)
-        {
+        public override void ClearData() {
+            base.ClearData();
+        }
+        protected override void RegisterInputParams(GH_InputParamManager pManager) {
             pManager.AddNumberParameter("Width", "B", "Model Width (mm)", GH_ParamAccess.item, 150.0);
             pManager.AddNumberParameter("Height", "H", "Model High (mm)", GH_ParamAccess.item, 150.0);
             pManager.AddNumberParameter("Thickness", "t", "Thickness (mm)", GH_ParamAccess.item, 6.0);
             pManager.AddNumberParameter("F", "F", "F (N/mm2)", GH_ParamAccess.item, 235);
             pManager.AddNumberParameter("Length", "L", "Model Length (mm)", GH_ParamAccess.item, 3200.0);
         }
-
-        protected override void RegisterOutputParams(GH_OutputParamManager pManager)
-        {
+        protected override void RegisterOutputParams(GH_OutputParamManager pManager) {
             pManager.AddNumberParameter("Analysis Parametar", "Param", "output Analysis Parameter", GH_ParamAccess.item);
             pManager.AddSurfaceParameter("View Model Surface", "Srf", "output Model Surface", GH_ParamAccess.item);
         }
-
-        protected override void SolveInstance(IGH_DataAccess DA)
-        {
+        protected override void SolveInstance(IGH_DataAccess DA) {
             // 引数設定
             double B = double.NaN;
             double H = double.NaN;
@@ -912,29 +857,23 @@ namespace ModelDisp
             DA.SetDataList(0, Params);
             DA.SetDataList(1, model);
         }
-
-        protected override Bitmap Icon
-        {
-            get
-            {
+        protected override Bitmap Icon {
+            get {
                 return BeamAnalysis.Properties.Resource.BOX_icon;
             }
         }
-
-        public override Guid ComponentGuid
-        {
-            get { return new Guid("419c3a44-cc48-4717-8fdf-5f5647a5ecAa"); }
+        public override Guid ComponentGuid {
+            get {
+                return new Guid("419c3a44-cc48-4717-8fdf-5f5647a5ecAa");
+            }
         }
     }
 }
-
 /// <summary>
 /// rhino上への結果の出力関連の設定
 /// </summary>
-namespace ResultView
-{
-    public class MomentViewer : GH_Component
-    {
+namespace ResultView {
+    public class MomentViewer : GH_Component {
         private List<double> M = new List<double>();
         private double M1 = 0, M2 = 0, M3 = 0, M4 = 0, M5 = 0, L = 0;
         private Point3d M_point1, M_point2, M_point3, M_point4, M_point5;
@@ -944,27 +883,26 @@ namespace ResultView
         private Color MomentColour = Color.FromName("SkyBlue");
 
         public MomentViewer()
-            : base("Moment View", "Moment", "Display Moment", "rgkr", "Result")
-        {
+            : base("Moment View", "Moment", "Display Moment", "rgkr", "Result") {
         }
-        protected override void RegisterInputParams(GH_InputParamManager pManager)
-        {
+        protected override void RegisterInputParams(GH_InputParamManager pManager) {
             pManager.AddNumberParameter("Moment", "M", "Input Moment", GH_ParamAccess.list);
             pManager.AddNumberParameter("Scale", "Sc", "Input Output Scale", GH_ParamAccess.item, 10);
         }
-        public override void ClearData()
-        {
+        public override void ClearData() {
             base.ClearData();
             M.Clear();
             MomentBrep.Clear();
         }
-        protected override void RegisterOutputParams(GH_OutputParamManager pManager)
-        {
+        protected override void BeforeSolveInstance() {
+            M = new List<double>();
+            MomentBrep = new List<Brep>();
+            M1 = 0; M2 = 0; M3 = 0; M4 = 0; M5 = 0; L = 0;
+        }
+        protected override void RegisterOutputParams(GH_OutputParamManager pManager) {
             pManager.AddBrepParameter("View Moment Surface", "Srf", "output Moment Surface", GH_ParamAccess.item);
         }
-
-        protected override void SolveInstance(IGH_DataAccess DA)
-        {
+        protected override void SolveInstance(IGH_DataAccess DA) {
             // 引数設定
             double Sc = double.NaN;
 
@@ -1019,14 +957,11 @@ namespace ResultView
             // まとめての出力なので、SetDataList で出力
             DA.SetDataList(0, MomentBrep);
         }
-
         /// <summary>
         /// Rhino の viewport への出力
         /// </summary>
-        public override void DrawViewportWires(IGH_PreviewArgs args)
-        {
-            if (M_point5 != null)
-            {
+        public override void DrawViewportWires(IGH_PreviewArgs args) {
+            if (M2 != 0) {
                 args.Display.Draw2dText(M1.ToString("F1"), TextColour, M_point1, true, 22);
                 args.Display.Draw2dText(M2.ToString("F1"), TextColour, M_point2, true, 22);
                 args.Display.Draw2dText(M3.ToString("F1"), TextColour, M_point3, true, 22);
@@ -1036,44 +971,42 @@ namespace ResultView
             // sureface 色付け
             MomentMaterial = new Rhino.Display.DisplayMaterial(MomentColour);
 
-            for (int i = 0; i < 4; i++) 
-                args.Display.DrawBrepShaded(MomentBrep[i], MomentMaterial);
+            if (M2 != 0) {
+                for (int i = 0; i < 4; i++) {
+                    args.Display.DrawBrepShaded(MomentBrep[i], MomentMaterial);
+                }
+            }
         }
-        public override void DrawViewportMeshes(IGH_PreviewArgs args)
-        {
+        public override void DrawViewportMeshes(IGH_PreviewArgs args) {
             MomentMaterial = new Rhino.Display.DisplayMaterial(MomentColour);
 
-            for (int i = 0; i < 4; i++)
-                args.Display.DrawBrepWires(MomentBrep[i], MomentMaterial.Diffuse, 0);
+            if (M2 != 0) {
+                for (int i = 0; i < 4; i++) {
+                    args.Display.DrawBrepWires(MomentBrep[i], MomentMaterial.Diffuse, 0);
+                }
+            }
         }
-
-        protected override System.Drawing.Bitmap Icon
-        {
-            get
-            {
+        protected override System.Drawing.Bitmap Icon {
+            get {
                 return BeamAnalysis.Properties.Resource.Result_M_icon;
             }
         }
-
-        public override Guid ComponentGuid
-        {
-            get { return new Guid("419c3a3a-cc48-4717-8cef-5f5647a5dcAa"); }
+        public override Guid ComponentGuid {
+            get {
+                return new Guid("419c3a3a-cc48-4717-8cef-5f5647a5dcAa");
+            }
         }
     }
 }
-
 /// <summary>
 /// 解析関連
 /// </summary>
-namespace Solver
-{
+namespace Solver {
     /// <summary>
     /// 許容曲げを計算するクラス
     /// </summary>
-    public class Calc_fb_solver
-    {
-        public void Calc_fb(List<double> Param, double Lb,  double C, ref double fb)
-        {
+    public class Calc_fb_solver {
+        public void Calc_fb(List<double> Param, double Lb,  double C, ref double fb) {
             // 解析関連パラメータ ＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝
             double H, L, F, fb_calc, i_t, lamda, Af, fb1, fb2;
             H = Param[0];
@@ -1085,49 +1018,44 @@ namespace Solver
             Af = Param[8];
 
             // 計算箇所 ＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝
-            if (fb_calc == 0) // H強軸回りの場合
-            {
+            // H強軸回りの場合
+            if (fb_calc == 0) {
                 fb1 = (1.0 - 0.4 * (Lb / i_t) * (Lb / i_t) / (C * lamda * lamda)) * F / 1.5;
                 fb2 = 89000.0 / (Lb * H / Af);
                 fb = Math.Min(Math.Max(fb1, fb2), F / 1.5);
             }
-            else if (fb_calc == 1) // 箱型丸型の場合
-            {
+            // 箱型丸型の場合
+            else if (fb_calc == 1) {
                 fb = F / 1.5;
             }
-            else if (fb_calc == 2) // L型等非対称断面の場合
-            {
+            // L型等非対称断面の場合
+            else if (fb_calc == 2) {
                 fb2 = 89000.0 / (Lb * H / Af);
                 fb = Math.Min(fb2, F / 1.5);
             }
-            else // エラー用　sig/fb が inf になるように 0指定
-            {
+            // エラー用　sig/fb が inf になるように 0指定
+            else {
                 fb = 0.0;
             }
         }
     }
 }
-
 /// <summary>
 /// UI にかかわる設定
 /// </summary>
-namespace UI_Setting
-{
+namespace UI_Setting {
     /// <summary>
     /// ボタンを押すとWindowsFormを出力させる
     /// </summary>
-    public class Attributes_Custom : GH_ComponentAttributes
-    {
-        public Attributes_Custom(GH_Component owner) : base(owner)
-        {
+    public class Attributes_Custom : GH_ComponentAttributes {
+        public Attributes_Custom(GH_Component owner) : base(owner) {
         }
         /// <summary>
         /// ボタンの箱(Rectangle)をを設定する。
         /// サイズが直接指定なので、汎用性は低め
         /// 今後は引数から箱のサイズを決めれるようにしたい。
         /// </summary>
-        protected override void Layout()
-        {
+        protected override void Layout() {
             base.Layout();
 
             Rectangle rec0 = GH_Convert.ToRectangle(Bounds);
@@ -1140,51 +1068,40 @@ namespace UI_Setting
             
             Bounds = rec0;
             ButtonBounds = rec1;
-
         }
-
-        private Rectangle ButtonBounds
-        {
+        private Rectangle ButtonBounds {
             get;
             set;
         }
-
         /// <summary>
         /// ラジオボタンの作りかけ
         /// </summary>
         /// <param name="graphics"></param>
         /// <param name="center"></param>
         /// <param name="Checked"></param>
-        private void DrawRadioButton(Graphics graphics, PointF center, bool Checked )
-        {
-            if (Checked)
-            {
+        private void DrawRadioButton(Graphics graphics, PointF center, bool Checked ) {
+            if (Checked) {
                 graphics.FillEllipse(Brushes.Black, center.X - 6, center.Y - 6, 12, 12);
             }
-            else
-            {
+            else {
                 graphics.FillEllipse(Brushes.Black, center.X - 6, center.Y - 6, 12, 12);
                 graphics.FillEllipse(Brushes.White, center.X - 4, center.Y - 4,  8,  8);
             }
         }
-
         /// <summary>
         /// 入力された箱からgrasshopperで認識されるTextCapsuleを作成する。
         /// </summary>
         /// <param name="canvas"></param>
         /// <param name="graphics"></param>
         /// <param name="channel"></param>
-        protected override void Render(GH_Canvas canvas, Graphics graphics, GH_CanvasChannel channel)
-        {
+        protected override void Render(GH_Canvas canvas, Graphics graphics, GH_CanvasChannel channel) {
             base.Render(canvas, graphics, channel);
-            if (channel == GH_CanvasChannel.Objects)
-            {
+            if (channel == GH_CanvasChannel.Objects) {
                 GH_Capsule button = GH_Capsule.CreateTextCapsule(ButtonBounds, ButtonBounds, GH_Palette.Black, "output", 2, 0);
                 button.Render(graphics, Selected, Owner.Locked, false);
                 button.Dispose();
             }
         }
-
         /// <summary>
         /// マウスダウンした時のイベントハンドラ
         /// 左クリックした際にWindouwsFormを使用してメッセージボックスを出力させる
@@ -1192,104 +1109,86 @@ namespace UI_Setting
         /// <param name="sender"></param>
         /// <param name="e"></param>
         /// <returns></returns>
-        public override GH_ObjectResponse RespondToMouseDown(GH_Canvas sender, GH_CanvasMouseEvent e)
-        {
-            if (e.Button == MouseButtons.Left)
-            {
+        public override GH_ObjectResponse RespondToMouseDown(GH_Canvas sender, GH_CanvasMouseEvent e) {
+            if (e.Button == MouseButtons.Left) {
                 RectangleF rec = ButtonBounds;
-                if (rec.Contains(e.CanvasLocation))
-                {
+                if (rec.Contains(e.CanvasLocation)) {
                     MessageBox.Show("入力データと解析結果を\nWindowsFormを使用して出力させる。", "結果のアウトプット", MessageBoxButtons.OK);
                     return GH_ObjectResponse.Handled;
                 }
-            }
-            
+            }            
             return base.RespondToMouseDown(sender, e);
         }
     }
 }
-
 /// <summary>
 /// 開発中、テスト中のものを入れる名前空間
 /// </summary>
-namespace WIP
-{
-    public class test_Component : GH_Component
-    {
+namespace WIP{
+    public class test_Component : GH_Component {
         private string m_T;
         private Color colour;
         private Point3d m_P;
 
-        public override Guid ComponentGuid
-        {
-            get
-            {
+        public override Guid ComponentGuid {
+            get {
                 return new Guid("{3B220754-4114-4170-B6C3-B286B86ED511}");
             }
         }
-        public test_Component() : base("test", "test", "test text tags in a Rhino viewport", "rgkr", "wip")
-        {
+        public test_Component() : base("test", "test", "test text tags in a Rhino viewport", "rgkr", "wip") {
         }
-        protected override void RegisterInputParams(GH_Component.GH_InputParamManager pManager)
-        {
+        public override void ClearData() {
+            base.ClearData();
+        }
+        protected override void RegisterInputParams(GH_Component.GH_InputParamManager pManager) {
             pManager.AddPointParameter("Location", "L", "Location of text tag", GH_ParamAccess.item);
             pManager.AddTextParameter("Text", "T", "The text to display", GH_ParamAccess.item);
             pManager.AddColourParameter("Colour", "C", "Optional colour for tag", GH_ParamAccess.item);
         }
-        protected override void RegisterOutputParams(GH_Component.GH_OutputParamManager pManager)
-        {
+        protected override void RegisterOutputParams(GH_Component.GH_OutputParamManager pManager) {
         }
-        protected override void SolveInstance(IGH_DataAccess DA)
-        {
+        protected override void SolveInstance(IGH_DataAccess DA)  {
             if (!DA.GetData(0, ref m_P)) { return; }
             if (!DA.GetData(1, ref m_T)) { return; }
             if (!DA.GetData(2, ref colour)) { return; }
         }
-        public override void DrawViewportWires(IGH_PreviewArgs args)
-        {
+        public override void DrawViewportWires(IGH_PreviewArgs args) {
             //  string m_T = "test";
             //  Color colour = Color.FromName("SlateBlue");
             //  Point3d m_P = new Point3d(0,0,0);
             args.Display.Draw2dText(m_T, colour, m_P, true, 22);
         }
     }
-
-    public class test_ColourComponent : GH_Component
-    {
+    public class test_ColourComponent : GH_Component {
         private Brep m_T;
         private Color colour;
         private Rhino.Display.DisplayMaterial material;
 
-        public override Guid ComponentGuid
-        {
-            get
-            {
+        public override Guid ComponentGuid {
+            get {
                 return new Guid("{3B220754-4114-4170-B6C3-B286B86ED501}");
             }
         }
-        public test_ColourComponent() : base("test", "test", "test text tags in a Rhino viewport", "rgkr", "wip")
-        {
+        public test_ColourComponent() : base("testColour", "testColour", "test text tags in a Rhino viewport", "rgkr", "wip") {
         }
-        protected override void RegisterInputParams(GH_Component.GH_InputParamManager pManager)
-        {
+        public override void ClearData() {
+            base.ClearData();
+        }
+        protected override void RegisterInputParams(GH_Component.GH_InputParamManager pManager) {
             pManager.AddBrepParameter("Location", "B", "Location of text tag", GH_ParamAccess.item);
             pManager.AddColourParameter("Colour", "C", "Optional colour for tag", GH_ParamAccess.item);
         }
-        protected override void RegisterOutputParams(GH_Component.GH_OutputParamManager pManager)
-        {
+        protected override void RegisterOutputParams(GH_Component.GH_OutputParamManager pManager) {
         }
-        protected override void SolveInstance(IGH_DataAccess DA)
-        {
+        protected override void SolveInstance(IGH_DataAccess DA) {
             if (!DA.GetData(0, ref m_T)) { return; }
             if (!DA.GetData(1, ref colour)) { return; }
             material = new Rhino.Display.DisplayMaterial(colour);
         }
-        public override void DrawViewportMeshes(IGH_PreviewArgs args)
-        {
+        public override void DrawViewportMeshes(IGH_PreviewArgs args) {
              args.Display.DrawBrepWires(m_T, material.Diffuse, 0);
         }
-        public override void DrawViewportWires(IGH_PreviewArgs args)
-        {
+        public override void DrawViewportWires(IGH_PreviewArgs args) {
              args.Display.DrawBrepShaded(m_T, material);
         }
     }

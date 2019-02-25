@@ -1,8 +1,12 @@
 # BeamAnalysis
+
 grasshopperで梁の解析をするコンポーネントです。  
 It is a component analyzing the beam in grasshopper.
 
 #### 開発状況 
+
++ ~2019/02/25
+  + ver0.2.03 モーメント、部材の断面、解析結果の数値の出力に対応
 + ~2018/07/16
   + ver0.2.02 直接入力のモーメントに対して計算するコンポーネント追加
 + ~2018/07/15

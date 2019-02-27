@@ -34,7 +34,7 @@ namespace BeamAnalysis {
           : base("Centralized Load",                 // 名称
                  "Centralized L",                    // 略称
                  "Stress Analysis of the Beam",      // コンポーネントの説明
-                 "rgkr",                             // カテゴリ(タブの表示名)
+                 "Mice",                             // カテゴリ(タブの表示名)
                  "Beam Analysis"                     // サブカテゴリ(タブ内の表示名)
                 ) {
         }
@@ -195,7 +195,7 @@ namespace BeamAnalysis {
         : base("Trapezoid Load",                   // 名称
                 "Trapezoid L",                      // 略称
                 "Stress Analysis of the Beam",      // コンポーネントの説明
-                "rgkr",                             // カテゴリ(タブの表示名)
+                "Mice",                             // カテゴリ(タブの表示名)
                 "Beam Analysis"                     // サブカテゴリ(タブ内の表示名)
             　) {
         }
@@ -307,7 +307,7 @@ namespace BeamAnalysis {
          : base("Cantilever Point Load",            // 名称
                 "Canti PL",                         // 略称
                 "Stress Analysis of the Beam",      // コンポーネントの説明
-                "rgkr",                             // カテゴリ(タブの表示名)
+                "Mice",                             // カテゴリ(タブの表示名)
                 "Beam Analysis"                     // サブカテゴリ(タブ内の表示名)
             　) {
         }
@@ -414,7 +414,7 @@ namespace BeamAnalysis {
       : base("Any Moment",     　　　　　        // 名称
              "Any M",                            // 略称
              "Stress Analysis of the Beam",      // コンポーネントの説明
-             "rgkr",                             // カテゴリ(タブの表示名)
+             "Mice",                             // カテゴリ(タブの表示名)
              "Beam Analysis"                     // サブカテゴリ(タブ内の表示名)
             ) {
         }
@@ -524,7 +524,7 @@ namespace ModelDisp {
         private Color ModelColour = Color.FromName("LightCoral");
 
         public H_Shape_Model()
-            : base("Make H Shape Model", "H Shape", "Display H Shape Model", "rgkr", "CrossSection") {
+            : base("Make H Shape Model", "H Shape", "Display H Shape Model", "Mice", "CrossSection") {
         }
         public override void ClearData() {
             base.ClearData();
@@ -660,7 +660,7 @@ namespace ModelDisp {
             : base("Make L Shape Model",
                    "L Shape",
                    "Display L Shape Model",
-                   "rgkr",
+                   "Mice",
                    "CrossSection"
                   ) {
         }
@@ -764,7 +764,7 @@ namespace ModelDisp {
             : base("Make BOX Shape Model",
                    "BOX Shape",
                    "Display BOX Shape Model",
-                   "rgkr",
+                   "Mice",
                    "CrossSection"
                   ) {
         }
@@ -883,7 +883,7 @@ namespace ResultView {
         private Color MomentColour = Color.FromName("SkyBlue");
 
         public MomentViewer()
-            : base("Moment View", "Moment", "Display Moment", "rgkr", "Result") {
+            : base("Moment View", "Moment", "Display Moment", "Mice", "Result") {
         }
         protected override void RegisterInputParams(GH_InputParamManager pManager) {
             pManager.AddNumberParameter("Moment", "M", "Input Moment", GH_ParamAccess.list);
@@ -1135,7 +1135,7 @@ namespace WIP{
                 return new Guid("{3B220754-4114-4170-B6C3-B286B86ED511}");
             }
         }
-        public test_Component() : base("test", "test", "test text tags in a Rhino viewport", "rgkr", "wip") {
+        public test_Component() : base("test", "test", "test text tags in a Rhino viewport", "Mice", "wip") {
         }
         public override void ClearData() {
             base.ClearData();
@@ -1169,7 +1169,7 @@ namespace WIP{
                 return new Guid("{3B220754-4114-4170-B6C3-B286B86ED501}");
             }
         }
-        public test_ColourComponent() : base("testColour", "testColour", "test text tags in a Rhino viewport", "rgkr", "wip") {
+        public test_ColourComponent() : base("testColour", "testColour", "test text tags in a Rhino viewport", "Mice", "wip") {
         }
         public override void ClearData() {
             base.ClearData();

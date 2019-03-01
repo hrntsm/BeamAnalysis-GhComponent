@@ -1,5 +1,5 @@
 ﻿/**
-Copyright (c) 2018 hiron_rgrk
+Copyright (c) 2018-2019 hiron_rgrk
 
 This software is released under the MIT License.
 See LICENSE
@@ -31,12 +31,8 @@ namespace BeamAnalysis {
         /// 中央集中荷重の梁の計算
         /// </summary>
         public Beam_CL_Analysis()
-          : base("Centralized Load",                 // 名称
-                 "Centralized L",                    // 略称
-                 "Stress Analysis of the Beam",      // コンポーネントの説明
-                 "Mice",                             // カテゴリ(タブの表示名)
-                 "Beam Analysis"                     // サブカテゴリ(タブ内の表示名)
-                ) {
+            //     名称                略称             ｺﾝﾎﾟｰﾈﾝﾄの説明                 ｶﾃｺﾞﾘ   ｻﾌﾞｶﾃｺﾞﾘ
+            : base("Centralized Load", "Centralized L", "Stress Analysis of the Beam", "Mice", "Beam Analysis") {
         }
         public override void ClearData() {
             base.ClearData();
@@ -192,12 +188,8 @@ namespace BeamAnalysis {
         /// 台形分布荷重の梁の計算
         /// </summary>
         public Beam_TL_Analysis()
-        : base("Trapezoid Load",                   // 名称
-                "Trapezoid L",                      // 略称
-                "Stress Analysis of the Beam",      // コンポーネントの説明
-                "Mice",                             // カテゴリ(タブの表示名)
-                "Beam Analysis"                     // サブカテゴリ(タブ内の表示名)
-            　) {
+            //     名称              略称           ｺﾝﾎﾟｰﾈﾝﾄの説明                 ｶﾃｺﾞﾘ   ｻﾌﾞｶﾃｺﾞﾘ
+            : base("Trapezoid Load", "Trapezoid L", "Stress Analysis of the Beam", "Mice", "Beam Analysis") {
         }
         public override void ClearData() {
             base.ClearData();
@@ -304,12 +296,8 @@ namespace BeamAnalysis {
         /// 先端集中荷重の片持ち梁の計算
         /// </summary>
         public Beam_Canti_Analysis()
-         : base("Cantilever Point Load",            // 名称
-                "Canti PL",                         // 略称
-                "Stress Analysis of the Beam",      // コンポーネントの説明
-                "Mice",                             // カテゴリ(タブの表示名)
-                "Beam Analysis"                     // サブカテゴリ(タブ内の表示名)
-            　) {
+            //     名称                     略称        ｺﾝﾎﾟｰﾈﾝﾄの説明                 ｶﾃｺﾞﾘ   ｻﾌﾞｶﾃｺﾞﾘ
+            : base("Cantilever Point Load", "Canti PL", "Stress Analysis of the Beam", "Mice", "Beam Analysis") {
         }
         public override void ClearData() {
             base.ClearData();
@@ -411,12 +399,8 @@ namespace BeamAnalysis {
         /// 任意荷重のかかった梁の計算
         /// </summary>
         public Beam_AnyM_Analysis()
-      : base("Any Moment",     　　　　　        // 名称
-             "Any M",                            // 略称
-             "Stress Analysis of the Beam",      // コンポーネントの説明
-             "Mice",                             // カテゴリ(タブの表示名)
-             "Beam Analysis"                     // サブカテゴリ(タブ内の表示名)
-            ) {
+            //     名称          略称     ｺﾝﾎﾟｰﾈﾝﾄの説明                 ｶﾃｺﾞﾘ   ｻﾌﾞｶﾃｺﾞﾘ
+            : base("Any Moment", "Any M", "Stress Analysis of the Beam", "Mice", "Beam Analysis") {
         }
         public override void ClearData() {
             base.ClearData();
@@ -524,6 +508,7 @@ namespace ModelDisp {
         private Color ModelColour = Color.FromName("LightCoral");
 
         public H_Shape_Model()
+            //     名称                  略称       ｺﾝﾎﾟｰﾈﾝﾄの説明           ｶﾃｺﾞﾘ   ｻﾌﾞｶﾃｺﾞﾘ
             : base("Make H Shape Model", "H Shape", "Display H Shape Model", "Mice", "CrossSection") {
         }
         public override void ClearData() {
@@ -656,16 +641,20 @@ namespace ModelDisp {
     /// L型断面の計算、出力
     /// </summary>
     public class L_Shape_Model : GH_Component {
+        private List<Brep> ModelBrep = new List<Brep>();
+        private Rhino.Display.DisplayMaterial ModelMaterial;
+        private Color ModelColour = Color.FromName("LightCoral");
+
         public L_Shape_Model()
-            : base("Make L Shape Model",
-                   "L Shape",
-                   "Display L Shape Model",
-                   "Mice",
-                   "CrossSection"
-                  ) {
+            //     名称                  略称       ｺﾝﾎﾟｰﾈﾝﾄの説明           ｶﾃｺﾞﾘ   ｻﾌﾞｶﾃｺﾞﾘ
+            : base("Make L Shape Model", "L Shape", "Display L Shape Model", "Mice", "CrossSection") {
         }
         public override void ClearData() {
             base.ClearData();
+            ModelBrep.Clear();
+        }
+        protected override void BeforeSolveInstance() {
+            ModelBrep = new List<Brep>();
         }
         protected override void RegisterInputParams(GH_InputParamManager pManager) {
             pManager.AddNumberParameter("Width", "B", "Model Width (mm)", GH_ParamAccess.item, 75.0);
@@ -734,16 +723,37 @@ namespace ModelDisp {
             Params.Add(fb_calc);
             Params.Add(0);
             Params.Add(0);
-            Params.Add(0);
+            Params.Add(Af);
 
             // モデルはRhino上に出力するだけなので、とりあえず配列でまとめる
             var model = new PlaneSurface[2];
             model[0] = flange;
             model[1] = web;
+            ModelBrep.Add(flange.ToBrep());
+            ModelBrep.Add(web.ToBrep());
 
             // まとめての出力なので、SetDataList で出力
             DA.SetDataList(1, model);
             DA.SetDataList(0, Params);
+        }
+        /// <summary>
+        /// Rhino の viewport への出力
+        /// </summary>
+        public override void DrawViewportWires(IGH_PreviewArgs args) {
+            ModelMaterial = new Rhino.Display.DisplayMaterial(ModelColour);
+            if (ModelBrep != null) {
+                for (int i = 0; i < 2; i++) {
+                    args.Display.DrawBrepShaded(ModelBrep[i], ModelMaterial);
+                }
+            }
+        }
+        public override void DrawViewportMeshes(IGH_PreviewArgs args) {
+            ModelMaterial = new Rhino.Display.DisplayMaterial(ModelColour);
+            if (ModelBrep != null) {
+                for (int i = 0; i < 2; i++) {
+                    args.Display.DrawBrepWires(ModelBrep[i], ModelMaterial.Diffuse, 0);
+                }
+            }
         }
         protected override System.Drawing.Bitmap Icon {
             get {
@@ -759,17 +769,19 @@ namespace ModelDisp {
     /// <summary>
     /// 箱型断面の計算、出力
     /// </summary>
-    public class BOX_Shape_Model : GH_Component {
+    public class BOX_Shape_Model : GH_Component
+    {
+        private List<Brep> ModelBrep = new List<Brep>();
+        private Rhino.Display.DisplayMaterial ModelMaterial;
+        private Color ModelColour = Color.FromName("LightCoral");
+
         public BOX_Shape_Model()
-            : base("Make BOX Shape Model",
-                   "BOX Shape",
-                   "Display BOX Shape Model",
-                   "Mice",
-                   "CrossSection"
-                  ) {
+            //     名称                    略称         ｺﾝﾎﾟｰﾈﾝﾄの説明             ｶﾃｺﾞﾘ   ｻﾌﾞｶﾃｺﾞﾘ
+            : base("Make BOX Shape Model", "BOX Shape", "Display BOX Shape Model", "Mice", "CrossSection") {
         }
         public override void ClearData() {
             base.ClearData();
+            ModelBrep.Clear();
         }
         protected override void RegisterInputParams(GH_InputParamManager pManager) {
             pManager.AddNumberParameter("Width", "B", "Model Width (mm)", GH_ParamAccess.item, 150.0);
@@ -852,10 +864,33 @@ namespace ModelDisp {
             model[1] = bottom_flange;
             model[2] = Rweb;
             model[3] = Lweb;
+            ModelBrep.Add(upper_flange.ToBrep());
+            ModelBrep.Add(bottom_flange.ToBrep());
+            ModelBrep.Add(Rweb.ToBrep());
+            ModelBrep.Add(Lweb.ToBrep());
 
             // まとめての出力なので、SetDataList で出力
             DA.SetDataList(0, Params);
             DA.SetDataList(1, model);
+        }
+        /// <summary>
+        /// Rhino の viewport への出力
+        /// </summary>
+        public override void DrawViewportWires(IGH_PreviewArgs args) {
+            ModelMaterial = new Rhino.Display.DisplayMaterial(ModelColour);
+            if (ModelBrep != null) {
+                for (int i = 0; i < 4; i++) {
+                    args.Display.DrawBrepShaded(ModelBrep[i], ModelMaterial);
+                }
+            }
+        }
+        public override void DrawViewportMeshes(IGH_PreviewArgs args) {
+            ModelMaterial = new Rhino.Display.DisplayMaterial(ModelColour);
+            if (ModelBrep != null) {
+                for (int i = 0; i < 4; i++) {
+                    args.Display.DrawBrepWires(ModelBrep[i], ModelMaterial.Diffuse, 0);
+                }
+            }
         }
         protected override Bitmap Icon {
             get {
@@ -883,6 +918,7 @@ namespace ResultView {
         private Color MomentColour = Color.FromName("SkyBlue");
 
         public MomentViewer()
+            //     名称           略称      ｺﾝﾎﾟｰﾈﾝﾄの説明    ｶﾃｺﾞﾘ   ｻﾌﾞｶﾃｺﾞﾘ
             : base("Moment View", "Moment", "Display Moment", "Mice", "Result") {
         }
         protected override void RegisterInputParams(GH_InputParamManager pManager) {
@@ -909,6 +945,11 @@ namespace ResultView {
             // 入力設定
             if (!DA.GetDataList(0, M)) { return; }
             if (!DA.GetData(1, ref Sc)) { return; }
+
+            // Scが0だとbrepが作れずエラーが出るので、Scの最小値を1に設定
+            if (Sc < 1) {
+                Sc = 1;
+            }
 
             M1 = M[0];
             M2 = M[1];
@@ -1125,71 +1166,71 @@ namespace UI_Setting {
 /// 開発中、テスト中のものを入れる名前空間
 /// </summary>
 namespace WIP{
-    public class test_Component : GH_Component {
-        private string m_T;
-        private Color colour;
-        private Point3d m_P;
+//    public class test_Component : GH_Component {
+//        private string m_T;
+//        private Color colour;
+//        private Point3d m_P;
 
-        public override Guid ComponentGuid {
-            get {
-                return new Guid("{3B220754-4114-4170-B6C3-B286B86ED511}");
-            }
-        }
-        public test_Component() : base("test", "test", "test text tags in a Rhino viewport", "Mice", "wip") {
-        }
-        public override void ClearData() {
-            base.ClearData();
-        }
-        protected override void RegisterInputParams(GH_Component.GH_InputParamManager pManager) {
-            pManager.AddPointParameter("Location", "L", "Location of text tag", GH_ParamAccess.item);
-            pManager.AddTextParameter("Text", "T", "The text to display", GH_ParamAccess.item);
-            pManager.AddColourParameter("Colour", "C", "Optional colour for tag", GH_ParamAccess.item);
-        }
-        protected override void RegisterOutputParams(GH_Component.GH_OutputParamManager pManager) {
-        }
-        protected override void SolveInstance(IGH_DataAccess DA)  {
-            if (!DA.GetData(0, ref m_P)) { return; }
-            if (!DA.GetData(1, ref m_T)) { return; }
-            if (!DA.GetData(2, ref colour)) { return; }
-        }
-        public override void DrawViewportWires(IGH_PreviewArgs args) {
-            //  string m_T = "test";
-            //  Color colour = Color.FromName("SlateBlue");
-            //  Point3d m_P = new Point3d(0,0,0);
-            args.Display.Draw2dText(m_T, colour, m_P, true, 22);
-        }
-    }
-    public class test_ColourComponent : GH_Component {
-        private Brep m_T;
-        private Color colour;
-        private Rhino.Display.DisplayMaterial material;
+//        public override Guid ComponentGuid {
+//            get {
+//                return new Guid("{3B220754-4114-4170-B6C3-B286B86ED511}");
+//            }
+//        }
+//        public test_Component() : base("test", "test", "test text tags in a Rhino viewport", "Mice", "wip") {
+//        }
+//        public override void ClearData() {
+//            base.ClearData();
+//        }
+//        protected override void RegisterInputParams(GH_Component.GH_InputParamManager pManager) {
+//            pManager.AddPointParameter("Location", "L", "Location of text tag", GH_ParamAccess.item);
+//            pManager.AddTextParameter("Text", "T", "The text to display", GH_ParamAccess.item);
+//            pManager.AddColourParameter("Colour", "C", "Optional colour for tag", GH_ParamAccess.item);
+//        }
+//        protected override void RegisterOutputParams(GH_Component.GH_OutputParamManager pManager) {
+//        }
+//        protected override void SolveInstance(IGH_DataAccess DA)  {
+//            if (!DA.GetData(0, ref m_P)) { return; }
+//            if (!DA.GetData(1, ref m_T)) { return; }
+//            if (!DA.GetData(2, ref colour)) { return; }
+//        }
+//        public override void DrawViewportWires(IGH_PreviewArgs args) {
+//            //  string m_T = "test";
+//            //  Color colour = Color.FromName("SlateBlue");
+//            //  Point3d m_P = new Point3d(0,0,0);
+//            args.Display.Draw2dText(m_T, colour, m_P, true, 22);
+//        }
+//    }
+//    public class test_ColourComponent : GH_Component {
+//        private Brep m_T;
+//        private Color colour;
+//        private Rhino.Display.DisplayMaterial material;
 
-        public override Guid ComponentGuid {
-            get {
-                return new Guid("{3B220754-4114-4170-B6C3-B286B86ED501}");
-            }
-        }
-        public test_ColourComponent() : base("testColour", "testColour", "test text tags in a Rhino viewport", "Mice", "wip") {
-        }
-        public override void ClearData() {
-            base.ClearData();
-        }
-        protected override void RegisterInputParams(GH_Component.GH_InputParamManager pManager) {
-            pManager.AddBrepParameter("Location", "B", "Location of text tag", GH_ParamAccess.item);
-            pManager.AddColourParameter("Colour", "C", "Optional colour for tag", GH_ParamAccess.item);
-        }
-        protected override void RegisterOutputParams(GH_Component.GH_OutputParamManager pManager) {
-        }
-        protected override void SolveInstance(IGH_DataAccess DA) {
-            if (!DA.GetData(0, ref m_T)) { return; }
-            if (!DA.GetData(1, ref colour)) { return; }
-            material = new Rhino.Display.DisplayMaterial(colour);
-        }
-        public override void DrawViewportMeshes(IGH_PreviewArgs args) {
-             args.Display.DrawBrepWires(m_T, material.Diffuse, 0);
-        }
-        public override void DrawViewportWires(IGH_PreviewArgs args) {
-             args.Display.DrawBrepShaded(m_T, material);
-        }
-    }
+//        public override Guid ComponentGuid {
+//            get {
+//                return new Guid("{3B220754-4114-4170-B6C3-B286B86ED501}");
+//            }
+//        }
+//        public test_ColourComponent() : base("testColour", "testColour", "test text tags in a Rhino viewport", "Mice", "wip") {
+//        }
+//        public override void ClearData() {
+//            base.ClearData();
+//        }
+//        protected override void RegisterInputParams(GH_Component.GH_InputParamManager pManager) {
+//            pManager.AddBrepParameter("Location", "B", "Location of text tag", GH_ParamAccess.item);
+//            pManager.AddColourParameter("Colour", "C", "Optional colour for tag", GH_ParamAccess.item);
+//        }
+//        protected override void RegisterOutputParams(GH_Component.GH_OutputParamManager pManager) {
+//        }
+//        protected override void SolveInstance(IGH_DataAccess DA) {
+//            if (!DA.GetData(0, ref m_T)) { return; }
+//            if (!DA.GetData(1, ref colour)) { return; }
+//            material = new Rhino.Display.DisplayMaterial(colour);
+//        }
+//        public override void DrawViewportMeshes(IGH_PreviewArgs args) {
+//             args.Display.DrawBrepWires(m_T, material.Diffuse, 0);
+//        }
+//        public override void DrawViewportWires(IGH_PreviewArgs args) {
+//             args.Display.DrawBrepShaded(m_T, material);
+//        }
+//    }
 }

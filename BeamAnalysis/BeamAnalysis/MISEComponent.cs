@@ -27,6 +27,19 @@ using Rhino.DocObjects;
 
 namespace BeamAnalysis {
     public class Beam_CL_Analysis : GH_Component {
+        private Color TextColour = Color.FromName("Black");
+        private Color ArrowColour = Color.FromName("Green");
+        // input
+        private List<double> Param = new List<double>();
+        private List<double> M_out = new List<double>();
+        private double P = double.NaN, Lb, E;
+        // output
+        private double M, Sig, D;
+        //
+        private double L = double.NaN, Iy, Zy;
+        private double C = 1.0;
+        private double fb = 0.0;
+
         /// <summary>
         /// 中央集中荷重の梁の計算
         /// </summary>
@@ -37,14 +50,12 @@ namespace BeamAnalysis {
         public override void ClearData() {
             base.ClearData();
         }
-        /// <summary>
-        /// UIのカスタム 作り切れてないのでコメントアウト
-        /// </summary>
-        //      public override void CreateAttributes()
-        //      {
-        //          m_attributes = new UI_Setting.Attributes_Custom(this);
-        //      }
-
+        // ジオメトリなどを出力しなくてもPreviewを有効にする。
+        public override bool IsPreviewCapable {
+            get {
+                return true;
+            }
+        }
         /// <summary>
         /// インプットパラメータの登録
         /// </summary>
@@ -53,6 +64,7 @@ namespace BeamAnalysis {
             pManager.AddNumberParameter("Load", "Load", "Centralized Load (kN)", GH_ParamAccess.item,100);
             pManager.AddNumberParameter("Lb", "Lb", "Buckling Length (mm)", GH_ParamAccess.item, 0.0);
             pManager.AddNumberParameter("Young's modulus", "E", "Young's Modulus (N/mm^2)", GH_ParamAccess.item, 205000);
+            pManager[0].Optional = true;
         }
         /// <summary>
         /// アウトプットパラメータの登録
@@ -69,27 +81,12 @@ namespace BeamAnalysis {
         /// </summary>
         /// <param name="DA">インプットパラメータからデータを取得し、出力用のデータを保持するオブジェクト</param>
         protected override void SolveInstance(IGH_DataAccess DA) {
-            // 引数の宣言＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝
-            // input
-            List<double> Param = new List<double>();
-            List<double> M_out = new List<double>();
-            double P = double.NaN;
-            double Lb = double.NaN;
-            double E = double.NaN;
-            // output
-            double M = double.NaN;
-            double Sig = double.NaN;
-            double D = double.NaN;
-            //
-            double L, Iy, Zy;
-            double C = 1.0;
-            double fb = 0.0;
-
             // 入力設定＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝
             if (!DA.GetDataList(0, Param)) { return; }
             if (!DA.GetData(1, ref P)) { return; }
             if (!DA.GetData(2, ref Lb)) { return; }
             if (!DA.GetData(3, ref E)) { return; }
+
 
             // 必要な引数の割り当て＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝
             L = Param[1];
@@ -121,6 +118,22 @@ namespace BeamAnalysis {
             DA.SetData(4, D);
         }
         /// <summary>
+        /// Rhino の viewport への出力
+        /// </summary>
+        public override void DrawViewportWires(IGH_PreviewArgs args) {
+            Point3d ArrowVectorStart = new Point3d(0, L / 2, L / 5);
+            Point3d ArrowVectorEnd = new Point3d(0, L / 2, 0);
+            Line ArrowVector = new Line(ArrowVectorStart, ArrowVectorEnd);
+            if (D != 0)
+            {
+                args.Display.DrawArrow(ArrowVector, ArrowColour);
+                args.Display.Draw2dText(P.ToString("F1"), TextColour, ArrowVectorStart, true, 22);
+            }
+        }
+        public override void DrawViewportMeshes(IGH_PreviewArgs args)
+        {
+        }
+        /// <summary>
         /// アイコンの設定。24x24 pixelsが推奨
         /// </summary>
         protected override System.Drawing.Bitmap Icon {
@@ -136,51 +149,6 @@ namespace BeamAnalysis {
                 return new Guid("621eac03-23fb-445c-9430-44ce37bf9020");
             }
         }
-        /// <summary>
-        /// コンポーネントを右クリック時に出るコンテキストメニューの編集
-        /// 未完なのでコメントアウト
-        /// </summary>
-        //      public override bool AppendMenuItems(ToolStripDropDown menu)
-        //      {
-        //          Menu_AppendObjectName(menu);          // オブジェクト名
-        //          Menu_AppendSeparator(menu);           // セパレータ
-        //          Menu_AppendPreviewItem(menu);         // プレビュー
-        //          Menu_AppendEnableItem(menu);          // Enable (コンポーネントの有効化)
-        //          Menu_AppendBakeItem(menu);            // ベーク
-        //          Menu_AppendSeparator(menu);           // セパレータ
-        //          Menu_AppendItem(menu, "Buckling Consideration",        // 追加部分
-        //                          Menu_MyCustomItemClicked);
-        //          Menu_AppendSeparator(menu);           // セパレータ
-        //          Menu_AppendItem(menu, "test");       // 追加部分
-        //          Menu_AppendSeparator(menu);           // セパレータ
-        //          Menu_AppendRuntimeMessages(menu);     // ランタイムメッセージ
-        //          Menu_AppendSeparator(menu);           // セパレータ
-        //          Menu_AppendObjectHelp(menu);          // ヘルプ
-        //          return true;
-        //      }
-
-        /// <summary>
-        /// 座屈考慮のフラグの処理
-        /// このままだとずっとfalseのままなので要修正
-        /// 未完なのでコメントアウト
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        //      private void Menu_MyCustomItemClicked(Object sender, EventArgs e)
-        //      {
-        //          bool BucklingConsideration = false;
-        //
-        //          if (BucklingConsideration == true)
-        //          {
-        //              BucklingConsideration = true;
-        //          }
-        //          else {
-        //              BucklingConsideration = false;
-        //          }
-        //          string test = BucklingConsideration.ToString();
-        //          Rhino.RhinoApp.WriteLine("BucklingConsideration:"+ test);
-        //      }
-
     }
 
     public class Beam_TL_Analysis : GH_Component {

@@ -25,27 +25,34 @@ using Rhino.Geometry;
 using Rhino.DocObjects;
 
 
-namespace BeamAnalysis {
+namespace BeamAnalysis{
+    /// <summary>
+    /// 中央集中荷重の梁の計算
+    /// </summary>
     public class Beam_CL_Analysis : GH_Component {
         private Color TextColour = Color.FromName("Black");
-        private Color ArrowColour = Color.FromName("Green");
+        private Color LoadArrowColour = Color.FromName("Green");
+        private Color RFArrowColour = Color.FromName("Chocolate");
         // input
         private List<double> Param = new List<double>();
         private List<double> M_out = new List<double>();
-        private double P = double.NaN, Lb, E;
+        private double P, Lb, E;
         // output
         private double M, Sig, D;
         //
-        private double L = double.NaN, Iy, Zy;
+        private double L, Iy, Zy;
         private double C = 1.0;
         private double fb = 0.0;
 
-        /// <summary>
-        /// 中央集中荷重の梁の計算
-        /// </summary>
+        // サブカテゴリ内の配置
+        public override GH_Exposure Exposure {
+            get {
+                return GH_Exposure.primary;
+            }
+        }
         public Beam_CL_Analysis()
-            //     名称                略称             ｺﾝﾎﾟｰﾈﾝﾄの説明                 ｶﾃｺﾞﾘ   ｻﾌﾞｶﾃｺﾞﾘ
-            : base("Centralized Load", "Centralized L", "Stress Analysis of the Beam", "Mice", "Beam Analysis") {
+            //     名称                略称             ｺﾝﾎﾟｰﾈﾝﾄの説明                              ｶﾃｺﾞﾘ   ｻﾌﾞｶﾃｺﾞﾘ
+            : base("Centralized Load", "Centralized L", "Analysis of the beam of Centralized Load", "Mice", "Beam Analysis") {
         }
         public override void ClearData() {
             base.ClearData();
@@ -121,13 +128,28 @@ namespace BeamAnalysis {
         /// Rhino の viewport への出力
         /// </summary>
         public override void DrawViewportWires(IGH_PreviewArgs args) {
-            Point3d ArrowVectorStart = new Point3d(0, L / 2, L / 5);
-            Point3d ArrowVectorEnd = new Point3d(0, L / 2, 0);
-            Line ArrowVector = new Line(ArrowVectorStart, ArrowVectorEnd);
+            // 荷重出力
+            Point3d LoadArrowStart = new Point3d(0, L / 2, L / 5);
+            Point3d LoadArrowEnd = new Point3d(0, L / 2, 0);
+            Line LoadArrow = new Line(LoadArrowStart, LoadArrowEnd);
+            // 反力出力
+            Point3d RFArrowStart1 = new Point3d(0, 0, -L / 10);
+            Point3d RFArrowEnd1 = new Point3d(0, 0, 0);
+            Line RFArrow1 = new Line(RFArrowStart1, RFArrowEnd1);
+            //
+            Point3d RFArrowStart2 = new Point3d(0, L, -L/10);
+            Point3d RFArrowEnd2 = new Point3d(0, L, 0);
+            Line RFArrow2 = new Line(RFArrowStart2, RFArrowEnd2);
             if (D != 0)
             {
-                args.Display.DrawArrow(ArrowVector, ArrowColour);
-                args.Display.Draw2dText(P.ToString("F1"), TextColour, ArrowVectorStart, true, 22);
+                args.Display.DrawArrow(LoadArrow, LoadArrowColour);
+                args.Display.Draw2dText(P.ToString("F1"), LoadArrowColour, LoadArrowStart, false, 22);
+                //
+                args.Display.DrawArrow(RFArrow1, RFArrowColour);
+                args.Display.Draw2dText((P / 2.0).ToString("F1"), RFArrowColour, RFArrowStart1, false, 22);
+                //
+                args.Display.DrawArrow(RFArrow2, RFArrowColour);
+                args.Display.Draw2dText((P / 2.0).ToString("F1"), RFArrowColour, RFArrowStart2, false, 22);
             }
         }
         public override void DrawViewportMeshes(IGH_PreviewArgs args)
@@ -151,16 +173,42 @@ namespace BeamAnalysis {
         }
     }
 
+    /// <summary>
+    /// 台形分布荷重の梁の計算
+    /// </summary>
     public class Beam_TL_Analysis : GH_Component {
-        /// <summary>
-        /// 台形分布荷重の梁の計算
-        /// </summary>
+        private Color TextColour = Color.FromName("Black");
+        private Color LoadArrowColour = Color.FromName("Green");
+        private Color RFArrowColour = Color.FromName("Chocolate");
+        // input
+        List<double> Param = new List<double>();
+        List<double> M_out = new List<double>();
+        double W, DW, Lb, E;
+        // output
+        double M, Sig, D;
+        //
+        double L, Iy, Zy, Ra, Mx;
+        double C = 1.0;
+        double fb = 0.0;
+
+        // サブカテゴリ内の配置
+        public override GH_Exposure Exposure {
+            get {
+                return GH_Exposure.primary;
+            }
+        }
         public Beam_TL_Analysis()
-            //     名称              略称           ｺﾝﾎﾟｰﾈﾝﾄの説明                 ｶﾃｺﾞﾘ   ｻﾌﾞｶﾃｺﾞﾘ
-            : base("Trapezoid Load", "Trapezoid L", "Stress Analysis of the Beam", "Mice", "Beam Analysis") {
+            //     名称              略称           ｺﾝﾎﾟｰﾈﾝﾄの説明                            ｶﾃｺﾞﾘ   ｻﾌﾞｶﾃｺﾞﾘ
+            : base("Trapezoid Load", "Trapezoid L", "Analysis of the beam of Trapezoid Load", "Mice", "Beam Analysis") {
         }
         public override void ClearData() {
             base.ClearData();
+        }
+        // ジオメトリなどを出力しなくてもPreviewを有効にする。
+        public override bool IsPreviewCapable {
+            get {
+                return true;
+            }
         }
         /// <summary>
         /// インプットパラメータの登録
@@ -171,6 +219,7 @@ namespace BeamAnalysis {
             pManager.AddNumberParameter("D Width", "DW", "Domination Width (mm)", GH_ParamAccess.item, 1800);
             pManager.AddNumberParameter("Lb", "Lb", "Buckling Length (mm)", GH_ParamAccess.item, 0.0);
             pManager.AddNumberParameter("Young's Modulus", "E", "Young's Modulus (N/mm^2)", GH_ParamAccess.item, 205000);
+            pManager[0].Optional = true;
         }
         /// <summary>
         /// アウトプットパラメータの登録
@@ -186,24 +235,7 @@ namespace BeamAnalysis {
         /// 計算部分
         /// </summary>
         /// <param name="DA">インプットパラメータからデータを取得し、出力用のデータを保持するオブジェクト</param>
-        protected override void SolveInstance(IGH_DataAccess DA) {
-            // 引数の宣言＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝
-            // input
-            List<double> Param = new List<double>();
-            List<double> M_out = new List<double>();
-            double W = double.NaN;
-            double DW = double.NaN;
-            double Lb = double.NaN;
-            double E = double.NaN;
-            // output
-            double M = double.NaN;
-            double Sig = double.NaN;
-            double D = double.NaN;
-            //
-            double L, Iy, Zy, Ra, Mx;
-            double C = 1.0;
-            double fb = 0.0;
-            
+        protected override void SolveInstance(IGH_DataAccess DA) {            
             // 入力設定＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝
             if (!DA.GetDataList(0, Param)) { return; }
             if (!DA.GetData(1, ref W)) { return; }
@@ -243,6 +275,54 @@ namespace BeamAnalysis {
             DA.SetData(4, D);
         }
         /// <summary>
+        /// Rhino の viewport への出力
+        /// </summary>
+        public override void DrawViewportWires(IGH_PreviewArgs args) {
+            Point3d LoadArrowStart, LoadArrowEnd, LoadArrowCenter = new Point3d(0, L /2, DW / 2);
+            Line LoadArrow; 
+            //
+            Point3d RFArrowStart1 = new Point3d(0, 0, -L / 10);
+            Point3d RFArrowEnd1 = new Point3d(0, 0, 0);
+            Line RFArrow1 = new Line(RFArrowStart1, RFArrowEnd1);
+            //
+            Point3d RFArrowStart2 = new Point3d(0, L, -L / 10);
+            Point3d RFArrowEnd2 = new Point3d(0, L, 0);
+            Line RFArrow2 = new Line(RFArrowStart2, RFArrowEnd2);
+
+            if (D != 0) {
+                for (int i = 0; i < 10; i++) {
+                    double LoadPosition = L / 11 * ( i + 1 );
+                    if (LoadPosition < DW) {
+                        LoadArrowStart = new Point3d(0, LoadPosition, LoadPosition / 2);
+                        LoadArrowEnd = new Point3d(0, LoadPosition, 0);
+                        LoadArrow = new Line(LoadArrowStart, LoadArrowEnd);
+                    }
+                    else if (LoadPosition > L - DW) {
+                        LoadArrowStart = new Point3d(0, LoadPosition, (L - LoadPosition) / 2);
+                        LoadArrowEnd = new Point3d(0, LoadPosition, 0);
+                        LoadArrow = new Line(LoadArrowStart, LoadArrowEnd);
+                    }
+                    else {
+                        LoadArrowStart = new Point3d(0, LoadPosition, DW / 2);
+                        LoadArrowEnd = new Point3d(0, LoadPosition, 0);
+                        LoadArrow = new Line(LoadArrowStart, LoadArrowEnd);
+                    }
+                    args.Display.DrawArrow(LoadArrow, LoadArrowColour);
+                }
+                //
+                args.Display.DrawLine(new Point3d(0, 0, 0), new Point3d(0, DW, DW / 2), LoadArrowColour);
+                args.Display.DrawLine(new Point3d(0, DW, DW / 2), new Point3d(0, L - DW, DW / 2), LoadArrowColour);
+                args.Display.DrawLine(new Point3d(0, L - DW, DW / 2), new Point3d(0, L, 0), LoadArrowColour);
+                args.Display.Draw2dText(W.ToString("F1"), LoadArrowColour, LoadArrowCenter, true, 22);
+                //
+                args.Display.DrawArrow(RFArrow1, RFArrowColour);
+                args.Display.Draw2dText((Ra / 1000).ToString("F1"), RFArrowColour, RFArrowStart1, false, 22);
+                //
+                args.Display.DrawArrow(RFArrow2, RFArrowColour);
+                args.Display.Draw2dText((Ra / 1000).ToString("F1"), RFArrowColour, RFArrowStart2, false, 22);
+            }
+        }
+        /// <summary>
         /// アイコンの設定。24x24 pixelsが推奨
         /// </summary>
         protected override System.Drawing.Bitmap Icon {
@@ -259,16 +339,42 @@ namespace BeamAnalysis {
             }
         }
     }
+    /// <summary>
+    /// 先端集中荷重の片持ち梁の計算
+    /// </summary>
     public class Beam_Canti_Analysis : GH_Component {
-        /// <summary>
-        /// 先端集中荷重の片持ち梁の計算
-        /// </summary>
+        private Color TextColour = Color.FromName("Black");
+        private Color LoadArrowColour = Color.FromName("Green");
+        private Color RFArrowColour = Color.FromName("Chocolate");
+        // input
+        List<double> Param = new List<double>();
+        List<double> M_out = new List<double>();
+        double P, Lb, E;
+        // output
+        double M, Sig, D;
+        //
+        double L, Iy, Zy;
+        double C = 1.0;
+        double fb = 0.0;
+
+        // サブカテゴリ内の配置
+        public override GH_Exposure Exposure {
+            get {
+                return GH_Exposure.secondary;
+            }
+        }
         public Beam_Canti_Analysis()
-            //     名称                     略称        ｺﾝﾎﾟｰﾈﾝﾄの説明                 ｶﾃｺﾞﾘ   ｻﾌﾞｶﾃｺﾞﾘ
-            : base("Cantilever Point Load", "Canti PL", "Stress Analysis of the Beam", "Mice", "Beam Analysis") {
+            //     名称                     略称        ｺﾝﾎﾟｰﾈﾝﾄの説明                                   ｶﾃｺﾞﾘ   ｻﾌﾞｶﾃｺﾞﾘ
+            : base("Cantilever Point Load", "Canti PL", "Analysis of the beam of Cantilever Point Load", "Mice", "Beam Analysis") {
         }
         public override void ClearData() {
             base.ClearData();
+        }
+        // ジオメトリなどを出力しなくてもPreviewを有効にする。
+        public override bool IsPreviewCapable {
+            get {
+                return true;
+            }
         }
         /// <summary>
         /// インプットパラメータの登録
@@ -278,6 +384,7 @@ namespace BeamAnalysis {
             pManager.AddNumberParameter("Point Load", "P", "Point Load (kN)", GH_ParamAccess.item, 10);
             pManager.AddNumberParameter("Lb", "Lb", "Buckling Length (mm)", GH_ParamAccess.item, 0.0);
             pManager.AddNumberParameter("Young's Modulus", "E", "Young's Modulus (N/mm^2)", GH_ParamAccess.item, 205000);
+            pManager[0].Optional = true;
         }
         /// <summary>
         /// アウトプットパラメータの登録
@@ -294,22 +401,6 @@ namespace BeamAnalysis {
         /// </summary>
         /// <param name="DA">インプットパラメータからデータを取得し、出力用のデータを保持するオブジェクト</param>
         protected override void SolveInstance(IGH_DataAccess DA) {
-            // 引数の宣言＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝
-            // input
-            List<double> Param = new List<double>();
-            List<double> M_out = new List<double>();
-            double P = double.NaN;
-            double Lb = double.NaN;
-            double E = double.NaN;
-            // output
-            double M = double.NaN;
-            double Sig = double.NaN;
-            double D = double.NaN;
-            //
-            double L, Iy, Zy;
-            double C = 1.0;
-            double fb = 0.0;
-
             // 入力設定＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝
             if (!DA.GetDataList(0, Param)) { return; }
             if (!DA.GetData(1, ref P)) { return; }
@@ -346,6 +437,27 @@ namespace BeamAnalysis {
             DA.SetData(4, D);
         }
         /// <summary>
+        /// Rhino の viewport への出力
+        /// </summary>
+        public override void DrawViewportWires(IGH_PreviewArgs args) {
+            // 荷重出力
+            Point3d LoadArrowStart = new Point3d(0, L, L / 5);
+            Point3d LoadArrowEnd = new Point3d(0, L, 0);
+            Line LoadArrow = new Line(LoadArrowStart, LoadArrowEnd);
+            // 反力出力
+            Point3d RFArrowStart1 = new Point3d(0, 0, -L / 5);
+            Point3d RFArrowEnd1 = new Point3d(0, 0, 0);
+            Line RFArrow1 = new Line(RFArrowStart1, RFArrowEnd1);
+            //
+            if (D != 0) {
+                args.Display.DrawArrow(LoadArrow, LoadArrowColour);
+                args.Display.Draw2dText(P.ToString("F1"), LoadArrowColour, LoadArrowStart, false, 22);
+                //
+                args.Display.DrawArrow(RFArrow1, RFArrowColour);
+                args.Display.Draw2dText((P).ToString("F1"), RFArrowColour, RFArrowStart1, false, 22);
+            }
+        }
+        /// <summary>
         /// アイコンの設定。24x24 pixelsが推奨
         /// </summary>
         protected override System.Drawing.Bitmap Icon {
@@ -362,16 +474,41 @@ namespace BeamAnalysis {
             }
         }
     }
+    /// <summary>
+    /// 任意荷重のかかった梁の計算
+    /// </summary>
     public class Beam_AnyM_Analysis : GH_Component {
-        /// <summary>
-        /// 任意荷重のかかった梁の計算
-        /// </summary>
+        private Color TextColour = Color.FromName("Black");
+        private Color LoadArrowColour = Color.FromName("Green");
+        private Color RFArrowColour = Color.FromName("Chocolate");
+        // input
+        List<double> Param = new List<double>();
+        List<double> M_out = new List<double>();
+        double Lb, E;
+        // output
+        double M, Sig, D;
+        //
+        double L, Zy;
+        double C = 1.0;
+        double fb = 0.0;
+        // サブカテゴリ内の配置
+        public override GH_Exposure Exposure {
+            get {
+                return GH_Exposure.tertiary;
+            }
+        }
         public Beam_AnyM_Analysis()
             //     名称          略称     ｺﾝﾎﾟｰﾈﾝﾄの説明                 ｶﾃｺﾞﾘ   ｻﾌﾞｶﾃｺﾞﾘ
-            : base("Any Moment", "Any M", "Stress Analysis of the Beam", "Mice", "Beam Analysis") {
+            : base("Any Moment", "Any M", "Analysis of the beam of Any Moment", "Mice", "Beam Analysis") {
         }
         public override void ClearData() {
             base.ClearData();
+        }
+        // ジオメトリなどを出力しなくてもPreviewを有効にする。
+        public override bool IsPreviewCapable {
+            get {
+                return true;
+            }
         }
         /// <summary>
         /// インプットパラメータの登録
@@ -381,6 +518,7 @@ namespace BeamAnalysis {
             pManager.AddNumberParameter("Any Moment", "AnyM", "Any Moment (kNm)", GH_ParamAccess.item, 1000);
             pManager.AddNumberParameter("Lb", "Lb", "Buckling Length (mm)", GH_ParamAccess.item, 0.0);
             pManager.AddNumberParameter("Young's Modulus", "E", "Young's Modulus (N/mm^2)", GH_ParamAccess.item, 205000);
+            pManager[0].Optional = true;
         }
         /// <summary>
         /// アウトプットパラメータの登録
@@ -397,21 +535,6 @@ namespace BeamAnalysis {
         /// </summary>
         /// <param name="DA">インプットパラメータからデータを取得し、出力用のデータを保持するオブジェクト</param>
         protected override void SolveInstance(IGH_DataAccess DA) {
-            // 引数の宣言＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝
-            // input
-            List<double> Param = new List<double>();
-            List<double> M_out = new List<double>();
-            double Lb = double.NaN;
-            double E = double.NaN;
-            // output
-            double M = double.NaN;
-            double Sig = double.NaN;
-            double D = double.NaN;
-            //
-            double L, Zy;
-            double C = 1.0;
-            double fb = 0.0;
-
             // 入力設定＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝
             if (!DA.GetDataList(0, Param)) { return; }
             if (!DA.GetData(1, ref M)) { return; }
@@ -444,6 +567,16 @@ namespace BeamAnalysis {
             DA.SetData(2, fb);
             DA.SetData(3, Sig / fb);
             DA.SetData(4, D);
+        }
+        /// <summary>
+        /// Rhino の viewport への出力
+        /// </summary>
+        public override void DrawViewportWires(IGH_PreviewArgs args) {
+            // 荷重出力
+            Point3d LoadArrowStart = new Point3d(0, L / 2, L / 5);
+            if (fb != 0) {
+                args.Display.Draw2dText(("AnyMoment "+ M.ToString("F1")), LoadArrowColour, LoadArrowStart, true, 22);
+            }
         }
         /// <summary>
         /// アイコンの設定。24x24 pixelsが推奨
@@ -892,6 +1025,7 @@ namespace ResultView {
         protected override void RegisterInputParams(GH_InputParamManager pManager) {
             pManager.AddNumberParameter("Moment", "M", "Input Moment", GH_ParamAccess.list);
             pManager.AddNumberParameter("Scale", "Sc", "Input Output Scale", GH_ParamAccess.item, 10);
+            pManager[0].Optional = true;
         }
         public override void ClearData() {
             base.ClearData();

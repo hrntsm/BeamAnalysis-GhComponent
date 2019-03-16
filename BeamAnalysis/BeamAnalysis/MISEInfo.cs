@@ -3,10 +3,10 @@ using System.Drawing;
 using Grasshopper.Kernel;
 
 namespace BeamAnalysis {
-    public class BeamAnalysisInfo : GH_AssemblyInfo {
+    public class MISEInfo : GH_AssemblyInfo {
         public override string Name {
             get {
-                return "BeamAnalysis";
+                return "MISE";
             }
         }
         public override Bitmap Icon {

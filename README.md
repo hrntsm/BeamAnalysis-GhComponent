@@ -5,9 +5,6 @@ This software is released under the MIT License, see LICENSE.md
 
 ![コンポーネント画像](https://github.com/hiro-n-rgkr/BeamAnalysis/blob/master/BeamAnalysis/BeamAnalysis/images/md_image.jpg)
 
-## 使い方の紹介動画    
-[![](https://i.ytimg.com/vi/65HYKiHWYDs/hqdefault.jpg)](https://www.youtube.com/watch?v=65HYKiHWYDs&t=17s)
-
 ## コンポーネントについて 
 + コンポーネント一覧
 
@@ -34,6 +31,9 @@ This software is released under the MIT License, see LICENSE.md
   曲線状のモーメント分布になる等分布荷重の場合でも、台形の組み合わせで表示しています。
 
 ![Analysisタブコンポーネント一覧](https://github.com/hiro-n-rgkr/BeamAnalysis/blob/master/BeamAnalysis/BeamAnalysis/images/ResultTab.JPG)
+
+## 使い方の紹介動画    
+[![](https://i.ytimg.com/vi/65HYKiHWYDs/hqdefault.jpg)](https://www.youtube.com/watch?v=65HYKiHWYDs&t=17s)
 
 ## 開発状況
 + ~2018/08/18

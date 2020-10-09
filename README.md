@@ -1,4 +1,5 @@
 # BeamAnalysis
+
 grasshopperで梁の解析をするコンポーネントです。MITライセンスのもとで公開しています。詳細はLICENSE.mdを見てください。  
 It is a component analyzing the beam in grasshopper.
 This software is released under the MIT License, see LICENSE.md
@@ -31,30 +32,3 @@ This software is released under the MIT License, see LICENSE.md
   曲線状のモーメント分布になる等分布荷重の場合でも、台形の組み合わせで表示しています。
 
 ![Analysisタブコンポーネント一覧](https://github.com/hiro-n-rgkr/BeamAnalysis/blob/master/BeamAnalysis/BeamAnalysis/images/ResultTab.JPG)
-
-## 使い方の紹介動画    
-[![](https://i.ytimg.com/vi/65HYKiHWYDs/hqdefault.jpg)](https://www.youtube.com/watch?v=65HYKiHWYDs&t=17s)
-
-## 開発状況
-+ ~2018/08/18
-  + ver0.1.03 片持ち梁の計算に対応 
-+ ~2018/07/25
-  + ver0.1.02 ライセンスに関する表記を追加(MITライセンス) 
-+ ~2018/07/22
-  + ver0.1.01 台形分布荷重の計算のバグを修正。 
-+ ~2018/07/16
-  + ver0.1.00 直接入力のモーメントに対して計算するコンポーネント追加。
-  リリース用に中身を若干整理し、masterにマージ
-+ ~2018/07/15
-  + ver0.0.04 モーメント図出力コンポーネント実装とアイコンのリソースデータ化
-+ ~2018/07/11
-  + ver0.0.03 角型断面の計算に対応とそれに伴うパラメータの整理
-+ ~2018/07/10
-  + ver0.0.02 コンポーネント名の整理と台形分布荷重での計算に対応しました。
-+ ~2018/07/07
-  + ver0.0.01 アイコンの設定と、許容曲げ応力度を告示の式で計算するようにしました。  
-+ ~2018/03/29   
-  + 中央集中荷重の単純梁の応力とたわみの計算するコンポーネントと  
-H型断面を入れると断面性能を計算して出力するコンポーネントの
-二つが含まれています。  
-developでは、UIの改善（コンテキストメニューやラジオボタンの追加）のための試行錯誤中
